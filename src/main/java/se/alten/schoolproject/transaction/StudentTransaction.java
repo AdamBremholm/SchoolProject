@@ -4,66 +4,79 @@ import se.alten.schoolproject.entity.Student;
 
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
+import javax.persistence.*;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Stateless
 @Default
-public class StudentTransaction implements StudentTransactionAccess{
+public class StudentTransaction implements TransactionAccess<Student> {
 
     @PersistenceContext(unitName="school")
     private EntityManager entityManager;
+    private EntityTransaction transaction = entityManager.getTransaction();
 
     @Override
-    public List listAllStudents() {
+    public List list() {
         Query query = entityManager.createQuery("SELECT s from Student s");
         return query.getResultList();
     }
 
     @Override
-    public Student addStudent(Student studentToAdd) {
+    public Student add(Student studentToAdd) {
         try {
+            transaction.begin();
             entityManager.persist(studentToAdd);
+            transaction.commit();
             entityManager.flush();
             return studentToAdd;
         } catch ( PersistenceException pe ) {
+            //TODO() error handling
             studentToAdd.setForename("duplicate");
             return studentToAdd;
         }
     }
 
     @Override
-    public void removeStudent(String student) {
-        //JPQL Query
-        Query query = entityManager.createQuery("DELETE FROM Student s WHERE s.email = :email");
-
-        //Native Query
-        //Query query = entityManager.createNativeQuery("DELETE FROM student WHERE email = :email", Student.class);
-
-        query.setParameter("email", student)
-             .executeUpdate();
+    public Optional<Student> findById(Long id) {
+        return Optional.ofNullable(entityManager.find(Student.class, id));
     }
 
     @Override
-    public void updateStudent(String forename, String lastname, String email) {
-        Query updateQuery = entityManager.createNativeQuery("UPDATE student SET forename = :forename, lastname = :lastname WHERE email = :email", Student.class);
-        updateQuery.setParameter("forename", forename)
-                   .setParameter("lastname", lastname)
-                   .setParameter("email", email)
-                   .executeUpdate();
+    public List<Student> findByName(String name) {
+       TypedQuery<Student> query = entityManager.createQuery("SELECT s from Student s WHERE s.forename = :name OR s.lastname = :name", Student.class);
+       query.setParameter("name", name);
+        return query.getResultList();
+    }
+
+
+    @Override
+    public void remove(Long id) {
+         if (findById(id).isPresent()) {
+             transaction.begin();
+             entityManager.remove(id);
+             transaction.commit();
+         } else {
+             throw new NoSuchElementException("No user with that id found");
+         }
+
     }
 
     @Override
-    public void updateStudentPartial(Student student) {
-        Student studentFound = (Student)entityManager.createQuery("SELECT s FROM Student s WHERE s.email = :email")
-                .setParameter("email", student.getEmail()).getSingleResult();
+    public void update(Long id, Student updateInfo) {
+        Optional<Student> optStudent = findById(id);
+        Optional<Student> optUpdateInfo = Optional.ofNullable(updateInfo);
+        if (optStudent.isPresent() && optUpdateInfo.isPresent()){
+            transaction.begin();
+            optUpdateInfo.map(Student::getEmail).ifPresent(optStudent.get()::setEmail);
+            optUpdateInfo.map(Student::getForename).ifPresent(optStudent.get()::setForename);
+            optUpdateInfo.map(Student::getLastname).ifPresent(optStudent.get()::setLastname);
+            transaction.commit();
+        } else
+            throw new NoSuchElementException("No user with that id found");
+     }
 
-        Query query = entityManager.createQuery("UPDATE Student SET forename = :studentForename WHERE email = :email");
-        query.setParameter("studentForename", student.getForename())
-                .setParameter("email", studentFound.getEmail())
-                .executeUpdate();
-    }
+
+
 }

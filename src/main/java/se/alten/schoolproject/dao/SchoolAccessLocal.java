@@ -1,20 +1,26 @@
 package se.alten.schoolproject.dao;
 
+import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.model.StudentModel;
 
 import javax.ejb.Local;
 import java.util.List;
+import java.util.Optional;
 
 @Local
-public interface SchoolAccessLocal {
+public interface SchoolAccessLocal<T, V> {
 
-    List listAllStudents() throws Exception;
+    List<V> listAll() throws Exception;
 
-    StudentModel addStudent(String studentModel);
+    V add(String jsonString);
 
-    void removeStudent(String student);
+    void remove(Long id);
 
-    void updateStudent(String forename, String lastname, String email);
+    void update(Long id, T updateInfo);
 
-    void updateStudentPartial(String studentModel);
+    V findById(Long id);
+
+    List<V> findByName(String name);
+
+
 }

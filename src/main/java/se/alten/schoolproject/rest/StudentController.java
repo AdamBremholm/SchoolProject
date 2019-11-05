@@ -13,7 +13,7 @@ import java.util.List;
 
 @Stateless
 @NoArgsConstructor
-@Path("/student")
+@Path("/students")
 public class StudentController {
 
     @Inject
@@ -23,7 +23,7 @@ public class StudentController {
     @Produces({"application/JSON"})
     public Response showStudents() {
         try {
-            List students = sal.listAllStudents();
+            List students = sal.listAll();
             return Response.ok(students).build();
         } catch ( Exception e ) {
             return Response.status(Response.Status.CONFLICT).build();
@@ -31,7 +31,6 @@ public class StudentController {
     }
 
     @POST
-    @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({"application/JSON"})
     /**
@@ -40,7 +39,7 @@ public class StudentController {
     public Response addStudent(String studentModel) {
         try {
 
-            StudentModel answer = sal.addStudent(studentModel);
+            StudentModel answer = sal.add(studentModel);
 
             switch ( answer.getForename()) {
                 case "empty":
@@ -56,10 +55,10 @@ public class StudentController {
     }
 
     @DELETE
-    @Path("{email}")
-    public Response deleteUser( @PathParam("email") String email) {
+    @Path("{id}")
+    public Response deleteUser( @PathParam("id") String id) {
         try {
-            sal.removeStudent(email);
+            sal.remove(id);
             return Response.ok().build();
         } catch ( Exception e ) {
             return Response.status(Response.Status.BAD_REQUEST).build();
@@ -68,7 +67,7 @@ public class StudentController {
 
     @PUT
     public void updateStudent( @QueryParam("forename") String forename, @QueryParam("lastname") String lastname, @QueryParam("email") String email) {
-        sal.updateStudent(forename, lastname, email);
+        sal.update(forename, lastname, email);
     }
 
     @PATCH

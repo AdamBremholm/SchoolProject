@@ -2,54 +2,65 @@ package se.alten.schoolproject.dao;
 
 import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.model.StudentModel;
-import se.alten.schoolproject.transaction.StudentTransactionAccess;
+import se.alten.schoolproject.transaction.TransactionAccess;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Stateless
-public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
+public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel>, SchoolAccessRemote<Student, StudentModel> {
 
     private Student student = new Student();
     private StudentModel studentModel = new StudentModel();
 
     @Inject
-    StudentTransactionAccess studentTransactionAccess;
+    TransactionAccess<Student> studentTransactionAccess;
 
     @Override
-    public List listAllStudents(){
-        return studentTransactionAccess.listAllStudents();
+    public List<StudentModel> listAll(){
+        List<Student> result = studentTransactionAccess.list();
+        return studentModel.toModel(result);
     }
 
     @Override
-    public StudentModel addStudent(String newStudent) {
-        Student studentToAdd = student.toEntity(newStudent);
+    public StudentModel add(String jsonString) {
+        Student studentToAdd = student.toEntity(jsonString);
         boolean checkForEmptyVariables = Stream.of(studentToAdd.getForename(), studentToAdd.getLastname(), studentToAdd.getEmail()).anyMatch(String::isBlank);
 
         if (checkForEmptyVariables) {
             studentToAdd.setForename("empty");
             return studentModel.toModel(studentToAdd);
         } else {
-            studentTransactionAccess.addStudent(studentToAdd);
+            studentTransactionAccess.add(studentToAdd);
             return studentModel.toModel(studentToAdd);
         }
     }
 
     @Override
-    public void removeStudent(String studentEmail) {
-        studentTransactionAccess.removeStudent(studentEmail);
+    public void remove(Long id) {
+        studentTransactionAccess.remove(id);
     }
 
     @Override
-    public void updateStudent(String forename, String lastname, String email) {
-        studentTransactionAccess.updateStudent(forename, lastname, email);
+    public void update(Long id, Student updateInfo) {
+        studentTransactionAccess.update(id, updateInfo);
     }
 
     @Override
-    public void updateStudentPartial(String studentModel) {
-        Student studentToUpdate = student.toEntity(studentModel);
-        studentTransactionAccess.updateStudentPartial(studentToUpdate);
+    public StudentModel findById(Long id) {
+        Student result = studentTransactionAccess.findById(id).orElseThrow(NoSuchElementException::new);
+        return studentModel.toModel(result);
     }
+
+    @Override
+    public List<StudentModel> findByName(String name) {
+        List<Student> result = studentTransactionAccess.findByName(name);
+        return studentModel.toModel(result);
+    }
+
+
 }

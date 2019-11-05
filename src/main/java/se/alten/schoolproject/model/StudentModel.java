@@ -3,6 +3,9 @@ package se.alten.schoolproject.model;
 import lombok.*;
 import se.alten.schoolproject.entity.Student;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,5 +33,11 @@ public class StudentModel {
                 studentModel.setEmail(student.getEmail());
                 return studentModel;
         }
+    }
+
+    public List<StudentModel> toModel(List<Student> students){
+        List<StudentModel> studentModelList = new ArrayList<>();
+        students.forEach(student -> studentModelList.add(toModel(student)));
+        return studentModelList;
     }
 }
