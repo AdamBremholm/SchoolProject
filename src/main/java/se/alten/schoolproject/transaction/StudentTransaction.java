@@ -1,6 +1,8 @@
 package se.alten.schoolproject.transaction;
 
+
 import se.alten.schoolproject.entity.Student;
+
 
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
@@ -8,14 +10,16 @@ import javax.persistence.*;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @Stateless
 @Default
 public class StudentTransaction implements TransactionAccess<Student> {
 
+
     @PersistenceContext(unitName="school")
     private EntityManager entityManager;
-    private EntityTransaction transaction = entityManager.getTransaction();
+
 
     @Override
     public List list() {
@@ -25,10 +29,9 @@ public class StudentTransaction implements TransactionAccess<Student> {
 
     @Override
     public Student add(Student studentToAdd) {
+
         try {
-            transaction.begin();
             entityManager.persist(studentToAdd);
-            transaction.commit();
             entityManager.flush();
             return studentToAdd;
         } catch ( PersistenceException pe ) {
@@ -54,9 +57,9 @@ public class StudentTransaction implements TransactionAccess<Student> {
     @Override
     public void remove(Long id) {
          if (findById(id).isPresent()) {
-             transaction.begin();
+             entityManager.getTransaction().begin();
              entityManager.remove(id);
-             transaction.commit();
+             entityManager.getTransaction().commit();
          } else {
              throw new NoSuchElementException("No user with that id found");
          }
@@ -68,11 +71,11 @@ public class StudentTransaction implements TransactionAccess<Student> {
         Optional<Student> optStudent = findById(id);
         Optional<Student> optUpdateInfo = Optional.ofNullable(updateInfo);
         if (optStudent.isPresent() && optUpdateInfo.isPresent()){
-            transaction.begin();
+            entityManager.getTransaction().begin();
             optUpdateInfo.map(Student::getEmail).ifPresent(optStudent.get()::setEmail);
             optUpdateInfo.map(Student::getForename).ifPresent(optStudent.get()::setForename);
             optUpdateInfo.map(Student::getLastname).ifPresent(optStudent.get()::setLastname);
-            transaction.commit();
+            entityManager.getTransaction().commit();
         } else
             throw new NoSuchElementException("No user with that id found");
      }

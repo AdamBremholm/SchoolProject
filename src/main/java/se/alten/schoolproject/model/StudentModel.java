@@ -1,7 +1,9 @@
 package se.alten.schoolproject.model;
 
 import lombok.*;
+import org.jboss.logging.Logger;
 import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.rest.StudentController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 public class StudentModel {
+
+    public static final Logger logger = Logger.getLogger(StudentModel.class);
 
     private Long id;
     private String forename;
@@ -28,6 +32,7 @@ public class StudentModel {
                 studentModel.setForename("duplicate");
                 return studentModel;
             default:
+                studentModel.setId(student.getId());
                 studentModel.setForename(student.getForename());
                 studentModel.setLastname(student.getLastname());
                 studentModel.setEmail(student.getEmail());
