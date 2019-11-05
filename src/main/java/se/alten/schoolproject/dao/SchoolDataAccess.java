@@ -46,8 +46,10 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
     }
 
     @Override
-    public void update(Long id, Student updateInfo) {
+    public StudentModel update(Long id, String jsonString) {
+        Student updateInfo = student.toEntity(jsonString);
         studentTransactionAccess.update(id, updateInfo);
+        return findById(id);
     }
 
     @Override

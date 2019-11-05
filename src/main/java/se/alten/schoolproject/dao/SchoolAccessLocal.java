@@ -16,7 +16,7 @@ public interface SchoolAccessLocal<T, V> {
 
     void remove(Long id);
 
-    void update(Long id, T updateInfo);
+    V update(Long id, String jsonString);
 
     V findById(Long id);
 
