@@ -48,26 +48,14 @@ public class StudentTransaction implements TransactionAccess<Student> {
 
     @Override
     public void remove(Long id) {
-         if (findById(id).isPresent()) {
-             entityManager.remove(id);
-         } else {
-             throw new NoSuchElementException("No student with id: "+id+ " found");
-         }
-
+        entityManager.remove(id);
+        entityManager.flush();
     }
 
     @Override
     public void update(Long id, Student updateInfo) {
-        Optional<Student> optStudent = findById(id);
-        Optional<Student> optUpdateInfo = Optional.ofNullable(updateInfo);
-        if (optStudent.isPresent() && optUpdateInfo.isPresent()){
-            entityManager.getTransaction().begin();
-            optUpdateInfo.map(Student::getEmail).ifPresent(optStudent.get()::setEmail);
-            optUpdateInfo.map(Student::getForename).ifPresent(optStudent.get()::setForename);
-            optUpdateInfo.map(Student::getLastname).ifPresent(optStudent.get()::setLastname);
-            entityManager.getTransaction().commit();
-        } else
-            throw new NoSuchElementException("No student with id: "+id+ " found");
+        entityManager.merge(updateInfo);
+        entityManager.flush();
      }
 
 

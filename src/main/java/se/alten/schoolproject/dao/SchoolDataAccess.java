@@ -1,6 +1,7 @@
 package se.alten.schoolproject.dao;
 
 
+import net.bytebuddy.pool.TypePool;
 import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.model.StudentModel;
 
@@ -11,6 +12,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Stateless
 public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel>, SchoolAccessRemote<Student, StudentModel> {
@@ -30,8 +32,7 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
     }
 
     @Override
-    public StudentModel add(String jsonString) {
-        Student studentToAdd = student.toEntity(jsonString);
+    public StudentModel add(Student studentToAdd) {
         StudentModel convertedStudent = studentModel.toModel(studentToAdd);
         List<String> nullOrEmptyFields = convertedStudent.listNullOrEmptyFieldsExceptId();
         if (nullOrEmptyFields.isEmpty()) {
@@ -44,13 +45,25 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
 
     @Override
     public void remove(Long id) {
-        studentTransactionAccess.remove(id);
+        if (studentTransactionAccess.findById(id).isPresent()) {
+            studentTransactionAccess.remove(id);
+        } else {
+            throw new NoSuchElementException("No student with id: "+id+ " found");
+        }
     }
 
     @Override
-    public StudentModel update(Long id, String jsonString) {
-        Student updateInfo = student.toEntity(jsonString);
-        studentTransactionAccess.update(id, updateInfo);
+    public StudentModel update(Long id, Student updateInfo) {
+        Student foundStudent = studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchElementException("No student with id: " +id+  " found"));
+        Optional<Student> optUpdateInfo = Optional.ofNullable(updateInfo);
+        if (optUpdateInfo.isPresent()){
+            optUpdateInfo.map(Student::getEmail).ifPresent(foundStudent::setEmail);
+            optUpdateInfo.map(Student::getForename).ifPresent(foundStudent::setForename);
+            optUpdateInfo.map(Student::getLastname).ifPresent(foundStudent::setLastname);
+        } else
+            throw new IllegalArgumentException("updateInfo is null in update");
+
+        studentTransactionAccess.update(id, foundStudent);
         return findById(id);
     }
 

@@ -5,6 +5,7 @@ import org.jboss.logging.Logger;
 import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.rest.StudentController;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,10 +16,10 @@ import java.util.Optional;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class StudentModel {
+public class StudentModel implements Serializable {
 
-    public static final Logger logger = Logger.getLogger(StudentModel.class);
 
+    private static final long serialVersionUID = 1L;
     private Long id;
     private String forename;
     private String lastname;

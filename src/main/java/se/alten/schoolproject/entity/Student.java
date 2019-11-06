@@ -9,10 +9,7 @@ import javax.json.JsonReader;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+
 
 @Entity
 @Table(name="student")
@@ -22,6 +19,8 @@ import java.util.List;
 @Setter
 @ToString
 public class Student implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

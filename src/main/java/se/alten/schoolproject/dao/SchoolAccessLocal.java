@@ -12,11 +12,11 @@ public interface SchoolAccessLocal<T, V> {
 
     List<V> listAll() throws Exception;
 
-    V add(String jsonString);
+    V add(T t);
 
     void remove(Long id);
 
-    V update(Long id, String jsonString);
+    V update(Long id, T t);
 
     V findById(Long id);
 

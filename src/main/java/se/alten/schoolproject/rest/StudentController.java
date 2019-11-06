@@ -35,13 +35,35 @@ public class StudentController {
         }
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{id}")
+    public Response getStudentById(@PathParam("id")Long id) {
+        try {
+            StudentModel result = sal.findById(id);
+            return Response.ok(result).build();
+        } catch ( Exception e ) {
+            return Response.notModified(e.toString()).status(Response.Status.BAD_REQUEST).build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getStudentByName(@QueryParam("name") String name) {
+        try {
+            List<StudentModel> result = sal.findByName(name);
+            return Response.ok(result).build();
+        } catch ( Exception e ) {
+            return Response.notModified(e.toString()).status(Response.Status.BAD_REQUEST).build();
+        }
+    }
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addStudent(String jsonString) {
+    public Response addStudent(Student student) {
         try {
-            System.out.println("running");
-            StudentModel answer = sal.add(jsonString);
+            StudentModel answer = sal.add(student);
             return Response.ok(answer).build();
         }
         catch ( PersistenceException pe ) {
@@ -55,7 +77,7 @@ public class StudentController {
 
     @DELETE
     @Path("{id}")
-    public Response deleteUser( @PathParam("id") Long id) {
+    public Response deleteUser(@PathParam("id") Long id) {
         try {
             sal.remove(id);
             return Response.ok().build();
@@ -65,28 +87,17 @@ public class StudentController {
     }
 
     @PUT
+    @PATCH
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}")
-    public Response updateStudentPut( @PathParam("id") Long id, String jsonString) {
+    public Response updateStudentPut(@PathParam("id") Long id, Student student) {
        try {
-          StudentModel result = sal.update(id, jsonString);
+          StudentModel result = sal.update(id, student);
            return Response.ok(result).build();
        } catch (Exception e) {
            return Response.notModified(e.toString()).status(Response.Status.BAD_GATEWAY).build();
        }
     }
 
-    @PATCH
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{id}")
-    public Response updateStudentPatch(@PathParam("id") Long id, String jsonString) {
-        try {
-            StudentModel result = sal.update(id, jsonString);
-            return Response.ok(result).build();
-        } catch (Exception e) {
-            return Response.notModified(e.toString()).status(Response.Status.BAD_GATEWAY).build();
-        }
-    }
 }
