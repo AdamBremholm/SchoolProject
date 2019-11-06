@@ -10,7 +10,7 @@ import javax.persistence.*;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.logging.Logger;
+
 
 @Stateless
 @Default

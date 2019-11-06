@@ -1,7 +1,6 @@
 package se.alten.schoolproject.rest;
 
 import lombok.NoArgsConstructor;
-import org.jboss.logging.Logger;
 import se.alten.schoolproject.dao.SchoolAccessLocal;
 import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.model.StudentModel;
@@ -26,7 +25,7 @@ public class StudentController {
     private SchoolAccessLocal<Student, StudentModel> sal;
 
     @GET
-    @Produces({"application/JSON"})
+    @Produces(MediaType.APPLICATION_JSON)
     public Response showStudents() {
         try {
             List<StudentModel> students = sal.listAll();
@@ -38,7 +37,7 @@ public class StudentController {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({"application/JSON"})
+    @Produces(MediaType.APPLICATION_JSON)
     public Response addStudent(String jsonString) {
         try {
             System.out.println("running");
@@ -67,7 +66,7 @@ public class StudentController {
 
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({"application/JSON"})
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}")
     public Response updateStudentPut( @PathParam("id") Long id, String jsonString) {
        try {
@@ -80,7 +79,7 @@ public class StudentController {
 
     @PATCH
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({"application/JSON"})
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}")
     public Response updateStudentPatch(@PathParam("id") Long id, String jsonString) {
         try {
