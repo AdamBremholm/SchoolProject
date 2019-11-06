@@ -26,7 +26,6 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
     @Override
     public List<StudentModel> listAll(){
         List<Student> result = studentTransactionAccess.list();
-        result.forEach(System.out::println);
         return studentModel.toModel(result);
     }
 
