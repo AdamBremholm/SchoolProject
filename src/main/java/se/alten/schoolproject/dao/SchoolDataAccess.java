@@ -11,7 +11,6 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.stream.Stream;
 
 @Stateless
 public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel>, SchoolAccessRemote<Student, StudentModel> {
@@ -34,14 +33,13 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
     @Override
     public StudentModel add(String jsonString) {
         Student studentToAdd = student.toEntity(jsonString);
-        boolean checkForEmptyVariables = Stream.of(studentToAdd.getForename(), studentToAdd.getLastname(), studentToAdd.getEmail()).anyMatch(String::isBlank);
-
-        if (checkForEmptyVariables) {
-            studentToAdd.setForename("empty");
-            return studentModel.toModel(studentToAdd);
-        } else {
+        StudentModel convertedStudent = studentModel.toModel(studentToAdd);
+        List<String> nullOrEmptyFields = convertedStudent.listNullOrEmptyFieldsExceptId();
+        if (nullOrEmptyFields.isEmpty()) {
             studentTransactionAccess.add(studentToAdd);
-            return studentModel.toModel(studentToAdd);
+            return convertedStudent;
+        } else {
+            throw new IllegalArgumentException(nullOrEmptyFields.toString() + " are blank or missing");
         }
     }
 
@@ -68,6 +66,8 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
         List<Student> result = studentTransactionAccess.findByName(name);
         return studentModel.toModel(result);
     }
+
+
 
 
 }

@@ -8,6 +8,7 @@ import se.alten.schoolproject.model.StudentModel;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.PersistenceException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -40,17 +41,16 @@ public class StudentController {
     @Produces({"application/JSON"})
     public Response addStudent(String jsonString) {
         try {
+            System.out.println("running");
             StudentModel answer = sal.add(jsonString);
-            switch ( answer.getForename()) {
-                case "empty":
-                    return Response.status(Response.Status.NOT_ACCEPTABLE).entity("{\"Fill in all details please\"}").build();
-                case "duplicate":
-                    return Response.status(Response.Status.EXPECTATION_FAILED).entity("{\"Email already registered!\"}").build();
-                default:
-                    return Response.ok(answer).build();
-            }
-        } catch ( Exception e ) {
-            return Response.notModified(e.toString()).status(Response.Status.BAD_REQUEST).build();
+            return Response.ok(answer).build();
+        }
+        catch ( PersistenceException pe ) {
+            return Response.status(Response.Status.CONFLICT).entity("{\""+pe.toString()+"\"}").build();
+        }
+
+        catch ( Exception e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.toString()+"\"}").build();
         }
     }
 

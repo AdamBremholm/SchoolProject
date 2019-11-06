@@ -23,22 +23,14 @@ public class StudentTransaction implements TransactionAccess<Student> {
 
     @Override
     public List list() {
-        Query query = entityManager.createQuery("SELECT s from Student s");
-        return query.getResultList();
+     return entityManager.createQuery("SELECT s from Student s").getResultList();
     }
 
     @Override
     public Student add(Student studentToAdd) {
-
-        try {
             entityManager.persist(studentToAdd);
             entityManager.flush();
             return studentToAdd;
-        } catch ( PersistenceException pe ) {
-            //TODO() error handling
-            studentToAdd.setForename("duplicate");
-            return studentToAdd;
-        }
     }
 
     @Override
@@ -57,11 +49,9 @@ public class StudentTransaction implements TransactionAccess<Student> {
     @Override
     public void remove(Long id) {
          if (findById(id).isPresent()) {
-             entityManager.getTransaction().begin();
              entityManager.remove(id);
-             entityManager.getTransaction().commit();
          } else {
-             throw new NoSuchElementException("No user with that id found");
+             throw new NoSuchElementException("No student with id: "+id+ " found");
          }
 
     }
@@ -77,7 +67,7 @@ public class StudentTransaction implements TransactionAccess<Student> {
             optUpdateInfo.map(Student::getLastname).ifPresent(optStudent.get()::setLastname);
             entityManager.getTransaction().commit();
         } else
-            throw new NoSuchElementException("No user with that id found");
+            throw new NoSuchElementException("No student with id: "+id+ " found");
      }
 
 

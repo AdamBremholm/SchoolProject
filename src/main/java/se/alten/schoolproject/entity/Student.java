@@ -9,6 +9,10 @@ import javax.json.JsonReader;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Entity
 @Table(name="student")
@@ -49,4 +53,5 @@ public class Student implements Serializable {
         }
         return student;
     }
+
 }
