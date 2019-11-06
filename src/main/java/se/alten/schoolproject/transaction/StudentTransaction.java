@@ -8,7 +8,6 @@ import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
 import javax.persistence.*;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 

@@ -4,6 +4,7 @@ import lombok.NoArgsConstructor;
 import se.alten.schoolproject.dao.SchoolAccessLocal;
 import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.exceptions.NoSuchIdException;
+import se.alten.schoolproject.exceptions.WrongHttpMethodException;
 import se.alten.schoolproject.model.StudentModel;
 
 import javax.ejb.Stateless;
@@ -13,7 +14,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
-
 
 
 @Stateless
@@ -55,7 +55,7 @@ public class StudentController {
             StudentModel result = sal.findById(id);
             return Response.ok(result).build();
         }
-        catch ( NoSuchIdException e ) {
+        catch (NoSuchIdException e ) {
             return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
         }
 
@@ -98,21 +98,41 @@ public class StudentController {
     }
 
     @PUT
-    @PATCH
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}")
-    public Response updateStudentPut(@PathParam("id") Long id, Student student) {
+    public Response replaceStudent(@PathParam("id") Long id, Student student) {
        try {
-          StudentModel result = sal.update(id, student);
+          StudentModel result = sal.updateFull(id, student);
            return Response.ok(result).build();
        }
        catch ( NoSuchIdException e ) {
            return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
        }
+       catch ( WrongHttpMethodException e ) {
+           return Response.status(Response.Status.METHOD_NOT_ALLOWED).entity("{\""+e.getClass().getSimpleName()+": " + e.getMessage()+"\"}").build();
+       }
        catch (Exception e) {
            return Response.notModified(e.toString()).status(Response.Status.BAD_GATEWAY).build();
        }
+    }
+
+    @PUT
+    @PATCH
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{id}")
+    public Response updateStudentPartial(@PathParam("id") Long id, Student student) {
+        try {
+            StudentModel result = sal.update(id, student);
+            return Response.ok(result).build();
+        }
+        catch ( NoSuchIdException e ) {
+            return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
+        }
+        catch (Exception e) {
+            return Response.notModified(e.toString()).status(Response.Status.BAD_GATEWAY).build();
+        }
     }
 
 }

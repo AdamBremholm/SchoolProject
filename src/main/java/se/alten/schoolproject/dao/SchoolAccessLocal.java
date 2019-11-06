@@ -22,5 +22,5 @@ public interface SchoolAccessLocal<T, V> {
 
     List<V> findByName(String name);
 
-
+    V updateFull(Long id, T student);
 }

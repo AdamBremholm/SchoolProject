@@ -1,27 +1,20 @@
 package se.alten.schoolproject.dao;
 
-
-import net.bytebuddy.pool.TypePool;
 import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.exceptions.NoSuchIdException;
+import se.alten.schoolproject.exceptions.WrongHttpMethodException;
 import se.alten.schoolproject.model.StudentModel;
-
 import se.alten.schoolproject.transaction.TransactionAccess;
-
-
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 @Stateless
 public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel>, SchoolAccessRemote<Student, StudentModel> {
 
-
-
-    private Student student = new Student();
-    private StudentModel studentModel = new StudentModel();
 
     @Inject
     TransactionAccess<Student> studentTransactionAccess;
@@ -29,12 +22,12 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
     @Override
     public List<StudentModel> listAll(){
         List<Student> result = studentTransactionAccess.list();
-        return studentModel.toModel(result);
+        return StudentModel.toModel(result);
     }
 
     @Override
     public StudentModel add(Student studentToAdd) {
-        StudentModel convertedStudent = studentModel.toModel(studentToAdd);
+        StudentModel convertedStudent = StudentModel.toModel(studentToAdd);
         List<String> nullOrEmptyFields = convertedStudent.listNullOrEmptyFieldsExceptId();
         if (nullOrEmptyFields.isEmpty()) {
             studentTransactionAccess.add(studentToAdd);
@@ -58,11 +51,12 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
         Student foundStudent = studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
         Optional<Student> optUpdateInfo = Optional.ofNullable(updateInfo);
         if (optUpdateInfo.isPresent()){
-            optUpdateInfo.map(Student::getEmail).ifPresent(foundStudent::setEmail);
-            optUpdateInfo.map(Student::getForename).ifPresent(foundStudent::setForename);
-            optUpdateInfo.map(Student::getLastname).ifPresent(foundStudent::setLastname);
+            optUpdateInfo.map(Student::getEmail).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setEmail);
+            optUpdateInfo.map(Student::getForename).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setForename);
+            optUpdateInfo.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setLastname);
         } else
             throw new IllegalArgumentException("updateInfo is null in update");
+
 
         studentTransactionAccess.update(id, foundStudent);
         return findById(id);
@@ -71,16 +65,33 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
     @Override
     public StudentModel findById(Long id) {
         Student result = studentTransactionAccess.findById(id).orElseThrow(NoSuchIdException::new);
-        return studentModel.toModel(result);
+        return StudentModel.toModel(result);
     }
 
     @Override
     public List<StudentModel> findByName(String name) {
         List<Student> result = studentTransactionAccess.findByName(name);
-        return studentModel.toModel(result);
+        return StudentModel.toModel(result);
     }
 
+    @Override
+    public StudentModel updateFull(Long id, Student student) {
+        if(allFieldsExistsAndNotEmpty(student)) {
+            studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
+            student.setId(id);
+            studentTransactionAccess.update(id, student);
+            return findById(id);
+        }
+        else
+            throw new WrongHttpMethodException("use http PATCH for partial updates");
+    }
 
+    private boolean allFieldsExistsAndNotEmpty(Student student) {
+        boolean emailExists =  Optional.ofNullable(student).map(Student::getEmail).filter(Predicate.not(String::isBlank)).isPresent();
+        boolean forenameExists =  Optional.ofNullable(student).map(Student::getForename).filter(Predicate.not(String::isBlank)).isPresent();
+        boolean lastNameExists =  Optional.ofNullable(student).map(Student::getLastname).filter(Predicate.not(String::isBlank)).isPresent();
+        return emailExists && forenameExists && lastNameExists;
+    }
 
 
 }
