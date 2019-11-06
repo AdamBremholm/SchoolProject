@@ -3,6 +3,7 @@ package se.alten.schoolproject.dao;
 
 import net.bytebuddy.pool.TypePool;
 import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.exceptions.NoSuchIdException;
 import se.alten.schoolproject.model.StudentModel;
 
 import se.alten.schoolproject.transaction.TransactionAccess;
@@ -54,7 +55,7 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
 
     @Override
     public StudentModel update(Long id, Student updateInfo) {
-        Student foundStudent = studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchElementException("No student with id: " +id+  " found"));
+        Student foundStudent = studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
         Optional<Student> optUpdateInfo = Optional.ofNullable(updateInfo);
         if (optUpdateInfo.isPresent()){
             optUpdateInfo.map(Student::getEmail).ifPresent(foundStudent::setEmail);
@@ -69,7 +70,7 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
 
     @Override
     public StudentModel findById(Long id) {
-        Student result = studentTransactionAccess.findById(id).orElseThrow(NoSuchElementException::new);
+        Student result = studentTransactionAccess.findById(id).orElseThrow(NoSuchIdException::new);
         return studentModel.toModel(result);
     }
 
