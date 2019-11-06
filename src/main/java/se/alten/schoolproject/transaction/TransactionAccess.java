@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface TransactionAccess<T> {
     List<T> list();
     T add(T t);
-    void remove(Long id);
+    void remove(T t);
     void update(Long id, T updateInfo);
     Optional<T> findById(Long id);
     List<T> findByName(String name);

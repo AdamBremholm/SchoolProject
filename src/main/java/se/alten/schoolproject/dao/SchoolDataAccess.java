@@ -39,11 +39,9 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
 
     @Override
     public void remove(Long id) {
-        if (studentTransactionAccess.findById(id).isPresent()) {
-            studentTransactionAccess.remove(id);
-        } else {
-            throw new NoSuchElementException("No student with id: "+id+ " found");
-        }
+       Student foundStudent = studentTransactionAccess.findById(id).orElseThrow(NoSuchIdException::new);
+       studentTransactionAccess.remove(foundStudent);
+
     }
 
     @Override

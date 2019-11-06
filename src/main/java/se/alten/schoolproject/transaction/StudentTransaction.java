@@ -46,8 +46,8 @@ public class StudentTransaction implements TransactionAccess<Student> {
 
 
     @Override
-    public void remove(Long id) {
-        entityManager.remove(id);
+    public void remove(Student student) {
+        entityManager.remove(student);
         entityManager.flush();
     }
 
