@@ -43,24 +43,5 @@ public class StudentModel implements Serializable {
         return studentModelList;
     }
 
-    /**
-     * Uses reflection to check if any of the declared fields in this instance of StudentModel(except id) is null or empty.
-     * Put this method here instead of in Student so that the Student fields are not exposed
-     * @return list will null and empty field names.
-     */
-    public List<String> listNullOrEmptyFieldsExceptId(){
-        List<String> results = new ArrayList<>();
-        for (Field f : this.getClass().getDeclaredFields()) {
-            f.setAccessible(true);
-            try {
-                if (f.get(this) == null || f.get(this) instanceof String && ((String) f.get(this)).isBlank()) {
-                    if(!f.getName().equals("id"))
-                    results.add(f.getName());
-                }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return results;
-    }
+
 }

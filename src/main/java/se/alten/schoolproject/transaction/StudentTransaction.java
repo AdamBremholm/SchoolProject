@@ -26,10 +26,9 @@ public class StudentTransaction implements TransactionAccess<Student> {
     }
 
     @Override
-    public Student add(Student studentToAdd) {
+    public void add(Student studentToAdd) {
             entityManager.persist(studentToAdd);
             entityManager.flush();
-            return studentToAdd;
     }
 
     @Override
@@ -42,6 +41,13 @@ public class StudentTransaction implements TransactionAccess<Student> {
        TypedQuery<Student> query = entityManager.createQuery("SELECT s from Student s WHERE s.forename = :name OR s.lastname = :name", Student.class);
        query.setParameter("name", name);
         return query.getResultList();
+    }
+
+    @Override
+    public Optional<Student> findByEmail(String email) {
+        TypedQuery<Student> query = entityManager.createQuery("SELECT s from Student s WHERE s.email = :email", Student.class);
+        query.setParameter("email", email);
+        return Optional.ofNullable(query.getSingleResult());
     }
 
 

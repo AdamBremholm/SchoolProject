@@ -3,6 +3,7 @@ package se.alten.schoolproject.rest;
 import lombok.NoArgsConstructor;
 import se.alten.schoolproject.dao.SchoolAccessLocal;
 import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.exceptions.MissingFieldException;
 import se.alten.schoolproject.exceptions.NoSuchIdException;
 import se.alten.schoolproject.exceptions.WrongHttpMethodException;
 import se.alten.schoolproject.model.StudentModel;
@@ -25,7 +26,6 @@ public class StudentController {
 
     @Inject
     private SchoolAccessLocal<Student, StudentModel> sal;
-
 
     /**
      * Method both for listing all students and using query parameter by name.
@@ -71,12 +71,14 @@ public class StudentController {
     public Response addStudent(Student student) {
         try {
             StudentModel answer = sal.add(student);
-            return Response.ok(answer).build();
+            return Response.ok(answer).status(Response.Status.CREATED).build();
         }
         catch ( PersistenceException pe ) {
             return Response.status(Response.Status.CONFLICT).entity("{\""+pe.getClass().getSimpleName()+"\"}").build();
         }
-
+        catch ( MissingFieldException e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getMessage()+"\"}").build();
+        }
         catch ( Exception e ) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
         }
@@ -87,7 +89,7 @@ public class StudentController {
     public Response deleteUser(@PathParam("id") Long id) {
         try {
             sal.remove(id);
-            return Response.ok().build();
+            return Response.status(Response.Status.NO_CONTENT).build();
         }
         catch ( NoSuchIdException e ) {
             return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
@@ -117,7 +119,6 @@ public class StudentController {
        }
     }
 
-    @PUT
     @PATCH
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

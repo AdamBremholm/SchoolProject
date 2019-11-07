@@ -9,9 +9,10 @@ import java.util.Optional;
 @Local
 public interface TransactionAccess<T> {
     List<T> list();
-    T add(T t);
+    void add(T t);
     void remove(T t);
     void update(Long id, T updateInfo);
     Optional<T> findById(Long id);
     List<T> findByName(String name);
+    Optional<T> findByEmail(String email);
 }

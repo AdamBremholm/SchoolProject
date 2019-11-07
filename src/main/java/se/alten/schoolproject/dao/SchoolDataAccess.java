@@ -1,14 +1,16 @@
 package se.alten.schoolproject.dao;
 
 import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.exceptions.MissingFieldException;
+import se.alten.schoolproject.exceptions.NoSuchEmailException;
 import se.alten.schoolproject.exceptions.NoSuchIdException;
 import se.alten.schoolproject.exceptions.WrongHttpMethodException;
 import se.alten.schoolproject.model.StudentModel;
 import se.alten.schoolproject.transaction.TransactionAccess;
+import se.alten.schoolproject.util.ReflectionUtil;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -27,13 +29,13 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
 
     @Override
     public StudentModel add(Student studentToAdd) {
-        StudentModel convertedStudent = StudentModel.toModel(studentToAdd);
-        List<String> nullOrEmptyFields = convertedStudent.listNullOrEmptyFieldsExceptId();
+        List<String> nullOrEmptyFields = ReflectionUtil.listNullOrEmptyFieldsExceptId(studentToAdd, "id");
         if (nullOrEmptyFields.isEmpty()) {
             studentTransactionAccess.add(studentToAdd);
-            return convertedStudent;
+            Student foundStudent = studentTransactionAccess.findByEmail(studentToAdd.getEmail()).orElseThrow(NoSuchEmailException::new);
+            return StudentModel.toModel(foundStudent);
         } else {
-            throw new IllegalArgumentException(nullOrEmptyFields.toString() + " are blank or missing");
+            throw new MissingFieldException(nullOrEmptyFields.toString() + " are blank or missing");
         }
     }
 
@@ -47,18 +49,12 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
     @Override
     public StudentModel update(Long id, Student updateInfo) {
         Student foundStudent = studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
-        Optional<Student> optUpdateInfo = Optional.ofNullable(updateInfo);
-        if (optUpdateInfo.isPresent()){
-            optUpdateInfo.map(Student::getEmail).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setEmail);
-            optUpdateInfo.map(Student::getForename).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setForename);
-            optUpdateInfo.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setLastname);
-        } else
-            throw new IllegalArgumentException("updateInfo is null in update");
-
-
+        updateTargetFieldIfRequestFieldIsPresentAndNotBlank(foundStudent, updateInfo);
         studentTransactionAccess.update(id, foundStudent);
         return findById(id);
     }
+
+
 
     @Override
     public StudentModel findById(Long id) {
@@ -74,7 +70,7 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
 
     @Override
     public StudentModel updateFull(Long id, Student student) {
-        if(allFieldsExistsAndNotEmpty(student)) {
+        if(student.allFieldsExistsAndNotEmpty()) {
             studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
             student.setId(id);
             studentTransactionAccess.update(id, student);
@@ -84,11 +80,15 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
             throw new WrongHttpMethodException("use http PATCH for partial updates");
     }
 
-    private boolean allFieldsExistsAndNotEmpty(Student student) {
-        boolean emailExists =  Optional.ofNullable(student).map(Student::getEmail).filter(Predicate.not(String::isBlank)).isPresent();
-        boolean forenameExists =  Optional.ofNullable(student).map(Student::getForename).filter(Predicate.not(String::isBlank)).isPresent();
-        boolean lastNameExists =  Optional.ofNullable(student).map(Student::getLastname).filter(Predicate.not(String::isBlank)).isPresent();
-        return emailExists && forenameExists && lastNameExists;
+    private void updateTargetFieldIfRequestFieldIsPresentAndNotBlank(Student foundStudent, Student updateInfo) {
+        Optional<Student> optUpdateInfo = Optional.ofNullable(updateInfo);
+        if (optUpdateInfo.isPresent()) {
+            optUpdateInfo.map(Student::getEmail).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setEmail);
+            optUpdateInfo.map(Student::getForename).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setForename);
+            optUpdateInfo.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setLastname);
+        }
+        else
+            throw new IllegalArgumentException("updateInfo is null in update");
     }
 
 
