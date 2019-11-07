@@ -3,6 +3,7 @@ package se.alten.schoolproject.rest;
 import lombok.NoArgsConstructor;
 import se.alten.schoolproject.dao.SchoolAccessLocal;
 import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.exceptions.DuplicateStudentException;
 import se.alten.schoolproject.exceptions.MissingFieldException;
 import se.alten.schoolproject.exceptions.NoSuchIdException;
 import se.alten.schoolproject.exceptions.WrongHttpMethodException;
@@ -10,7 +11,6 @@ import se.alten.schoolproject.model.StudentModel;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.persistence.PersistenceException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -36,7 +36,7 @@ public class StudentController {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response showStudents(@QueryParam("name") String name) {
-        List<StudentModel> students = null;
+        List<StudentModel> students;
         try {
             if(name!=null)
             students = sal.findByName(name);
@@ -73,8 +73,8 @@ public class StudentController {
             StudentModel answer = sal.add(student);
             return Response.ok(answer).status(Response.Status.CREATED).build();
         }
-        catch ( PersistenceException pe ) {
-            return Response.status(Response.Status.CONFLICT).entity("{\""+pe.getClass().getSimpleName()+"\"}").build();
+        catch ( DuplicateStudentException e ) {
+            return Response.status(Response.Status.CONFLICT).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
         }
         catch ( MissingFieldException e ) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getMessage()+"\"}").build();

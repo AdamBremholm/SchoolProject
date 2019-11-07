@@ -4,7 +4,6 @@ import lombok.*;
 import se.alten.schoolproject.entity.Student;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

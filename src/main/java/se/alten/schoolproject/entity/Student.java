@@ -1,13 +1,9 @@
 package se.alten.schoolproject.entity;
 
 import lombok.*;
-import se.alten.schoolproject.model.StudentModel;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -38,9 +34,9 @@ public class Student implements Serializable {
 
 
     public boolean allFieldsExistsAndNotEmpty() {
-       boolean emailExists =  Optional.ofNullable(this).map(Student::getEmail).filter(Predicate.not(String::isBlank)).isPresent();
-       boolean forenameExists =  Optional.ofNullable(this).map(Student::getForename).filter(Predicate.not(String::isBlank)).isPresent();
-       boolean lastNameExists =  Optional.ofNullable(this).map(Student::getLastname).filter(Predicate.not(String::isBlank)).isPresent();
+       boolean emailExists =  Optional.of(this).map(Student::getEmail).filter(Predicate.not(String::isBlank)).isPresent();
+       boolean forenameExists =  Optional.of(this).map(Student::getForename).filter(Predicate.not(String::isBlank)).isPresent();
+       boolean lastNameExists =  Optional.of(this).map(Student::getLastname).filter(Predicate.not(String::isBlank)).isPresent();
        return emailExists && forenameExists && lastNameExists;
    }
 }

@@ -1,16 +1,12 @@
 package se.alten.schoolproject.dao;
 
-import se.alten.schoolproject.entity.Student;
-import se.alten.schoolproject.model.StudentModel;
-
 import javax.ejb.Local;
 import java.util.List;
-import java.util.Optional;
 
 @Local
 public interface SchoolAccessLocal<T, V> {
 
-    List<V> listAll() throws Exception;
+    List<V> listAll();
 
     V add(T t);
 

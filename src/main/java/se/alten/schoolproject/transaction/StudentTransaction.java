@@ -2,6 +2,7 @@ package se.alten.schoolproject.transaction;
 
 
 import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.exceptions.DuplicateStudentException;
 
 
 import javax.ejb.Stateless;
@@ -21,14 +22,19 @@ public class StudentTransaction implements TransactionAccess<Student> {
 
 
     @Override
-    public List list() {
-     return entityManager.createQuery("SELECT s from Student s").getResultList();
+    public List<Student> list() {
+     return entityManager.createQuery("SELECT s from Student s", Student.class).getResultList();
     }
 
     @Override
     public void add(Student studentToAdd) {
             entityManager.persist(studentToAdd);
+        try {
             entityManager.flush();
+        } catch (PersistenceException e) {
+            throw new DuplicateStudentException();
+        }
+
     }
 
     @Override
@@ -58,7 +64,7 @@ public class StudentTransaction implements TransactionAccess<Student> {
     }
 
     @Override
-    public void update(Long id, Student updateInfo) {
+    public void update(Student updateInfo) {
         entityManager.merge(updateInfo);
         entityManager.flush();
      }

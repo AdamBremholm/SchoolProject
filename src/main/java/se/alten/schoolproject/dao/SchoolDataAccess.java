@@ -50,10 +50,9 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
     public StudentModel update(Long id, Student updateInfo) {
         Student foundStudent = studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
         updateTargetFieldIfRequestFieldIsPresentAndNotBlank(foundStudent, updateInfo);
-        studentTransactionAccess.update(id, foundStudent);
+        studentTransactionAccess.update(foundStudent);
         return findById(id);
     }
-
 
 
     @Override
@@ -73,7 +72,7 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
         if(student.allFieldsExistsAndNotEmpty()) {
             studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
             student.setId(id);
-            studentTransactionAccess.update(id, student);
+            studentTransactionAccess.update(student);
             return findById(id);
         }
         else
