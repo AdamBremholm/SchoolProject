@@ -1,5 +1,5 @@
 # SchoolProject
-by Adam & Filip
+by Adam Bremholm
 
 ### Installation
 

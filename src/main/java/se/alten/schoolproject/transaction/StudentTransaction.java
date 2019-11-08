@@ -4,10 +4,12 @@ package se.alten.schoolproject.transaction;
 import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.exceptions.DuplicateStudentException;
 
-
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
-import javax.persistence.*;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceException;
+import javax.persistence.TypedQuery;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,8 +30,8 @@ public class StudentTransaction implements TransactionAccess<Student> {
 
     @Override
     public void add(Student studentToAdd) {
-            entityManager.persist(studentToAdd);
         try {
+            entityManager.persist(studentToAdd);
             entityManager.flush();
         } catch (PersistenceException e) {
             throw new DuplicateStudentException();
