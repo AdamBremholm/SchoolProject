@@ -2,61 +2,45 @@ package se.alten.schoolproject.model;
 
 import lombok.*;
 import se.alten.schoolproject.entity.Student;
-import se.alten.schoolproject.entity.Subject;
 
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class StudentModel {
+public class StudentModel implements Serializable {
 
+
+    private static final long serialVersionUID = 1L;
+    private Long id;
     private String forename;
     private String lastname;
     private String email;
-    private Set<String> subjects = new HashSet<>();
 
-    public StudentModel toModel(Student student) {
+    public static StudentModel toModel(Student student) {
         StudentModel studentModel = new StudentModel();
-
-        switch (student.getForename()) {
-            case "empty":
-                studentModel.setForename("empty");
-                return studentModel;
-            case "duplicate":
-                studentModel.setForename("duplicate");
-                return studentModel;
-            default:
-                studentModel.setForename(student.getForename());
-                studentModel.setLastname(student.getLastname());
-                studentModel.setEmail(student.getEmail());
-                student.getSubject().forEach(subject -> {
-                    studentModel.subjects.add(subject.getTitle());
-                });
-                return studentModel;
-        }
+        Optional<Student> studentOptional = Optional.ofNullable(student);
+        if(studentOptional.isPresent()) {
+           studentOptional.map(Student::getId).ifPresent(studentModel::setId);
+           studentOptional.map(Student::getForename).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setForename);
+           studentOptional.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setLastname);
+           studentOptional.map(Student::getEmail).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setEmail);
+           return studentModel;
+        } else
+            throw new IllegalArgumentException("student not present in toModel");
     }
 
-    public List<StudentModel> toModelList(List<Student> students) {
-
-        List<StudentModel> studentModels = new ArrayList<>();
-
-        students.forEach(student -> {
-            StudentModel sm = new StudentModel();
-            sm.forename = student.getForename();
-            sm.lastname = student.getLastname();
-            sm.email = student.getEmail();
-            student.getSubject().forEach(subject -> {
-                sm.subjects.add(subject.getTitle());
-            });
-
-            studentModels.add(sm);
-        });
-        return studentModels;
+    public static List<StudentModel> toModel(List<Student> students){
+        List<StudentModel> studentModelList = new ArrayList<>();
+        students.forEach(student -> studentModelList.add(toModel(student)));
+        return studentModelList;
     }
+
+
 }

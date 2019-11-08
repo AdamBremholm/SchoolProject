@@ -1,25 +1,22 @@
 package se.alten.schoolproject.dao;
 
-import se.alten.schoolproject.model.StudentModel;
-import se.alten.schoolproject.model.SubjectModel;
-
 import javax.ejb.Local;
 import java.util.List;
 
 @Local
-public interface SchoolAccessLocal {
+public interface SchoolAccessLocal<T, V> {
 
-    List listAllStudents();
+    List<V> listAll();
 
-    StudentModel addStudent(String studentModel);
+    V add(T t);
 
-    void removeStudent(String student);
+    void remove(Long id);
 
-    void updateStudent(String forename, String lastname, String email);
+    V update(Long id, T t);
 
-    void updateStudentPartial(String studentModel);
+    V findById(Long id);
 
-    List listAllSubjects();
+    List<V> findByName(String name);
 
-    SubjectModel addSubject(String subjectModel);
+    V updateFull(Long id, T student);
 }
