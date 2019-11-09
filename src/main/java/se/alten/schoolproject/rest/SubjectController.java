@@ -2,6 +2,7 @@ package se.alten.schoolproject.rest;
 
 import lombok.NoArgsConstructor;
 import se.alten.schoolproject.dao.SchoolAccessLocal;
+import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.model.SubjectModel;
 
 import javax.ejb.Stateless;
@@ -13,14 +14,14 @@ import java.util.List;
 
 @Stateless
 @NoArgsConstructor
-@Path("/subject")
+@Path("/subjects")
 public class SubjectController {
 
     @Inject
     private SchoolAccessLocal sal;
 
     @GET
-    @Produces({"application/JSON"})
+    @Produces(MediaType.APPLICATION_JSON)
     public Response listSubjects() {
         try {
             List subject = sal.listAllSubjects();
@@ -31,9 +32,9 @@ public class SubjectController {
     }
 
     @POST
-    @Produces({"application/JSON"})
+    @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response addSubject(String subject) {
+    public Response addSubject(Subject subject) {
         try {
             SubjectModel subjectModel = sal.addSubject(subject);
             return Response.ok(subjectModel).build();

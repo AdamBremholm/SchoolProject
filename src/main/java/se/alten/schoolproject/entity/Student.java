@@ -4,7 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 
 
@@ -31,6 +31,15 @@ public class Student implements Serializable {
 
     @Column(name = "email", unique = true)
     private String email;
+
+    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @JoinTable(name = "student_subject",
+            joinColumns=@JoinColumn(name="stud_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "subj_id", referencedColumnName = "id"))
+    private Set<Subject> subject;
+
+    @Transient
+    private List<String> subjects;
 
 
     public boolean allFieldsExistsAndNotEmpty() {

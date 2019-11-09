@@ -1,12 +1,14 @@
 package se.alten.schoolproject.dao;
 
 import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.exceptions.MissingFieldException;
-import se.alten.schoolproject.exceptions.NoSuchEmailException;
 import se.alten.schoolproject.exceptions.NoSuchIdException;
 import se.alten.schoolproject.exceptions.WrongHttpMethodException;
 import se.alten.schoolproject.model.StudentModel;
-import se.alten.schoolproject.transaction.TransactionAccess;
+import se.alten.schoolproject.model.SubjectModel;
+import se.alten.schoolproject.transaction.StudentTransactionAccess;
+import se.alten.schoolproject.transaction.SubjectTransactionAccess;
 import se.alten.schoolproject.util.ReflectionUtil;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -15,69 +17,102 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 @Stateless
-public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel>, SchoolAccessRemote<Student, StudentModel> {
+public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
 
 
     @Inject
-    TransactionAccess<Student> studentTransactionAccess;
+    StudentTransactionAccess studentTransactionAccess;
+
+    @Inject
+    SubjectTransactionAccess subjectTransactionAccess;
+
+
+    //Student methods
 
     @Override
-    public List<StudentModel> listAll(){
-        List<Student> result = studentTransactionAccess.list();
-        return StudentModel.toModel(result);
+    public List<Student> listAllStudents(){
+        List<Student> result = studentTransactionAccess.listStudents();
+        result.forEach(System.out::println);
+        return result;
     }
 
     @Override
-    public StudentModel add(Student studentToAdd) {
-        List<String> nullOrEmptyFields = ReflectionUtil.listNullOrEmptyFieldsExceptId(studentToAdd, "id");
+    public StudentModel addStudent(Student studentToAdd) {
+        List<String> nullOrEmptyFields = ReflectionUtil.listNullOrEmptyFields(studentToAdd, List.of("id", "subject"));
         if (nullOrEmptyFields.isEmpty()) {
-            studentTransactionAccess.add(studentToAdd);
-            Student foundStudent = studentTransactionAccess.findByEmail(studentToAdd.getEmail()).orElseThrow(NoSuchEmailException::new);
-            return StudentModel.toModel(foundStudent);
+            Student addedStudent = studentTransactionAccess.addStudent(studentToAdd);
+            return StudentModel.toModel(addedStudent);
         } else {
             throw new MissingFieldException(nullOrEmptyFields.toString() + " are blank or missing");
         }
     }
 
     @Override
-    public void remove(Long id) {
-       Student foundStudent = studentTransactionAccess.findById(id).orElseThrow(NoSuchIdException::new);
-       studentTransactionAccess.remove(foundStudent);
+    public void removeStudent(Long id) {
+       Student foundStudent = studentTransactionAccess.findStudentById(id).orElseThrow(NoSuchIdException::new);
+       studentTransactionAccess.removeStudent(foundStudent);
 
     }
 
     @Override
-    public StudentModel update(Long id, Student updateInfo) {
-        Student foundStudent = studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
+    public StudentModel updateStudentPartial(Long id, Student updateInfo) {
+        Student foundStudent = studentTransactionAccess.findStudentById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
         updateTargetFieldIfRequestFieldIsPresentAndNotBlank(foundStudent, updateInfo);
-        studentTransactionAccess.update(foundStudent);
-        return findById(id);
+        studentTransactionAccess.updateStudent(foundStudent);
+        return findStudentById(id);
     }
 
 
     @Override
-    public StudentModel findById(Long id) {
-        Student result = studentTransactionAccess.findById(id).orElseThrow(NoSuchIdException::new);
+    public StudentModel findStudentById(Long id) {
+        Student result = studentTransactionAccess.findStudentById(id).orElseThrow(NoSuchIdException::new);
         return StudentModel.toModel(result);
     }
 
     @Override
-    public List<StudentModel> findByName(String name) {
-        List<Student> result = studentTransactionAccess.findByName(name);
-        return StudentModel.toModel(result);
+    public List<Student> findStudentsByName(String name) {
+        List<Student> result = studentTransactionAccess.findStudentByName(name);
+       return result;
     }
 
     @Override
-    public StudentModel updateFull(Long id, Student student) {
+    public StudentModel updateStudentFull(Long id, Student student) {
         if(student.allFieldsExistsAndNotEmpty()) {
-            studentTransactionAccess.findById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
+            studentTransactionAccess.findStudentById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
             student.setId(id);
-            studentTransactionAccess.update(student);
-            return findById(id);
+            studentTransactionAccess.updateStudent(student);
+            return findStudentById(id);
         }
         else
             throw new WrongHttpMethodException("use http PATCH for partial updates");
     }
+
+    ///// Subject Methods
+
+    @Override
+    public List<Subject> listAllSubjects() {
+       List<Subject> result = subjectTransactionAccess.listAllSubjects();
+       return result;
+    }
+
+    @Override
+    public SubjectModel addSubject(Subject subjectToAdd) {
+        List<String> nullOrEmptyFields = ReflectionUtil.listNullOrEmptyFields(subjectToAdd, List.of("id"));
+        if (nullOrEmptyFields.isEmpty()) {
+            Subject addedSubject = subjectTransactionAccess.addSubject(subjectToAdd);
+            return SubjectModel.toModel(addedSubject);
+        } else {
+            throw new MissingFieldException(nullOrEmptyFields.toString() + " are blank or missing");
+        }
+    }
+
+    @Override
+    public List<Subject> findSubjectsByName(List<String> subject) {
+     return subjectTransactionAccess.getSubjectByName(subject);
+    }
+
+
+    //// Utility methods
 
     private void updateTargetFieldIfRequestFieldIsPresentAndNotBlank(Student foundStudent, Student updateInfo) {
         Optional<Student> optUpdateInfo = Optional.ofNullable(updateInfo);
@@ -89,6 +124,11 @@ public class SchoolDataAccess implements SchoolAccessLocal<Student, StudentModel
         else
             throw new IllegalArgumentException("updateInfo is null in update");
     }
+
+
+
+
+
 
 
 }

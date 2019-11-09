@@ -2,7 +2,7 @@ package se.alten.schoolproject.transaction;
 
 
 import se.alten.schoolproject.entity.Student;
-import se.alten.schoolproject.exceptions.DuplicateStudentException;
+import se.alten.schoolproject.exceptions.DuplicateException;
 
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
@@ -16,7 +16,7 @@ import java.util.Optional;
 
 @Stateless
 @Default
-public class StudentTransaction implements TransactionAccess<Student> {
+public class StudentTransaction implements StudentTransactionAccess {
 
 
     @PersistenceContext(unitName="school")
@@ -24,35 +24,36 @@ public class StudentTransaction implements TransactionAccess<Student> {
 
 
     @Override
-    public List<Student> list() {
+    public List<Student> listStudents() {
      return entityManager.createQuery("SELECT s from Student s", Student.class).getResultList();
     }
 
     @Override
-    public void add(Student studentToAdd) {
+    public Student addStudent(Student student) {
         try {
-            entityManager.persist(studentToAdd);
+            entityManager.persist(student);
             entityManager.flush();
+            return student;
         } catch (PersistenceException e) {
-            throw new DuplicateStudentException();
+            throw new DuplicateException();
         }
 
     }
 
     @Override
-    public Optional<Student> findById(Long id) {
+    public Optional<Student> findStudentById(Long id) {
         return Optional.ofNullable(entityManager.find(Student.class, id));
     }
 
     @Override
-    public List<Student> findByName(String name) {
+    public List<Student> findStudentByName(String name) {
        TypedQuery<Student> query = entityManager.createQuery("SELECT s from Student s WHERE s.forename = :name OR s.lastname = :name", Student.class);
        query.setParameter("name", name);
         return query.getResultList();
     }
 
     @Override
-    public Optional<Student> findByEmail(String email) {
+    public Optional<Student> findStudentByEmail(String email) {
         TypedQuery<Student> query = entityManager.createQuery("SELECT s from Student s WHERE s.email = :email", Student.class);
         query.setParameter("email", email);
         return Optional.ofNullable(query.getSingleResult());
@@ -60,13 +61,13 @@ public class StudentTransaction implements TransactionAccess<Student> {
 
 
     @Override
-    public void remove(Student student) {
+    public void removeStudent(Student student) {
         entityManager.remove(student);
         entityManager.flush();
     }
 
     @Override
-    public void update(Student updateInfo) {
+    public void updateStudent(Student updateInfo) {
         entityManager.merge(updateInfo);
         entityManager.flush();
      }
