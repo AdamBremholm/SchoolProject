@@ -11,7 +11,7 @@ import java.util.List;
 @Local
 public interface SchoolAccessLocal {
 
-    List<Student> listAllStudents();
+    List<StudentModel> listAllStudents();
 
     StudentModel addStudent(Student student);
 
@@ -21,13 +21,13 @@ public interface SchoolAccessLocal {
 
     StudentModel findStudentById(Long id);
 
-    List<Student> findStudentsByName(String name);
+    List<StudentModel> findStudentsByName(String name);
 
     StudentModel updateStudentFull(Long id, Student student);
 
-    List<Subject> listAllSubjects();
+    List<SubjectModel> listAllSubjects();
 
     SubjectModel addSubject(Subject subject);
 
-    List<Subject> findSubjectsByName(List<String> subject);
+    List<SubjectModel> findSubjectsByName(List<String> subject);
 }

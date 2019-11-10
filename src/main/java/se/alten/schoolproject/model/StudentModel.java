@@ -5,10 +5,7 @@ import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.entity.Subject;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 @Getter
@@ -24,6 +21,7 @@ public class StudentModel implements Serializable {
     private String forename;
     private String lastname;
     private String email;
+    private Set<String> subjects = new HashSet<>();
 
     public static StudentModel toModel(Student student) {
         StudentModel studentModel = new StudentModel();
@@ -33,6 +31,7 @@ public class StudentModel implements Serializable {
            studentOptional.map(Student::getForename).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setForename);
            studentOptional.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setLastname);
            studentOptional.map(Student::getEmail).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setEmail);
+           studentOptional.map(Student::getSubject).ifPresent(sub -> sub.forEach(s -> studentModel.getSubjects().add(s.getTitle())));
            return studentModel;
         } else
             throw new IllegalArgumentException("student not present in toModel");

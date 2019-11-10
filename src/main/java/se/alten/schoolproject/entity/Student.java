@@ -21,6 +21,7 @@ public class Student implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name="id")
     private Long id;
 
     @Column(name = "forename")
@@ -36,10 +37,10 @@ public class Student implements Serializable {
     @JoinTable(name = "student_subject",
             joinColumns=@JoinColumn(name="stud_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "subj_id", referencedColumnName = "id"))
-    private Set<Subject> subject;
+    private Set<Subject> subject = new HashSet<>();
 
     @Transient
-    private List<String> subjects;
+    private List<String> subjects = new ArrayList<>();
 
 
     public boolean allFieldsExistsAndNotEmpty() {

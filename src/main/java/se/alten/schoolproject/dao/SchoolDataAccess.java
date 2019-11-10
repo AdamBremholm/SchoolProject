@@ -14,6 +14,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 @Stateless
@@ -30,20 +31,30 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     //Student methods
 
     @Override
-    public List<Student> listAllStudents(){
+    public List<StudentModel> listAllStudents(){
         List<Student> result = studentTransactionAccess.listStudents();
-        result.forEach(System.out::println);
-        return result;
+        return StudentModel.toModel(result);
     }
 
     @Override
     public StudentModel addStudent(Student studentToAdd) {
-        List<String> nullOrEmptyFields = ReflectionUtil.listNullOrEmptyFields(studentToAdd, List.of("id", "subject"));
-        if (nullOrEmptyFields.isEmpty()) {
+        Set<String> emptyFields = ReflectionUtil.listNullOrEmptyFields(studentToAdd);
+        Set<String> emptyFieldsAfterExclusions = ReflectionUtil.removeExceptionsFromSet(emptyFields, Set.of("id", "subject", "subjects"));
+        if (emptyFieldsAfterExclusions.isEmpty()) {
             Student addedStudent = studentTransactionAccess.addStudent(studentToAdd);
+            if (!emptyFields.contains("subjects")) {
+                List<Subject> subjects = subjectTransactionAccess.getSubjectByName(studentToAdd.getSubjects());
+                                subjects.forEach(sub -> {
+                    addedStudent.getSubject().add(sub);
+                });
+
+
+            }
+
             return StudentModel.toModel(addedStudent);
+
         } else {
-            throw new MissingFieldException(nullOrEmptyFields.toString() + " are blank or missing");
+            throw new MissingFieldException(emptyFieldsAfterExclusions.toString() + " are blank or missing");
         }
     }
 
@@ -70,9 +81,9 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     }
 
     @Override
-    public List<Student> findStudentsByName(String name) {
+    public List<StudentModel> findStudentsByName(String name) {
         List<Student> result = studentTransactionAccess.findStudentByName(name);
-       return result;
+       return StudentModel.toModel(result);
     }
 
     @Override
@@ -90,27 +101,27 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     ///// Subject Methods
 
     @Override
-    public List<Subject> listAllSubjects() {
+    public List<SubjectModel> listAllSubjects() {
        List<Subject> result = subjectTransactionAccess.listAllSubjects();
-       return result;
+      return SubjectModel.toModel(result);
     }
 
     @Override
     public SubjectModel addSubject(Subject subjectToAdd) {
-        List<String> nullOrEmptyFields = ReflectionUtil.listNullOrEmptyFields(subjectToAdd, List.of("id"));
-        if (nullOrEmptyFields.isEmpty()) {
+        Set<String> emptyFields = ReflectionUtil.listNullOrEmptyFields(subjectToAdd);
+        Set<String> emptyFieldsAfterExclusions = ReflectionUtil.removeExceptionsFromSet(emptyFields, Set.of("id"));
+        if (emptyFieldsAfterExclusions.isEmpty()) {
             Subject addedSubject = subjectTransactionAccess.addSubject(subjectToAdd);
             return SubjectModel.toModel(addedSubject);
         } else {
-            throw new MissingFieldException(nullOrEmptyFields.toString() + " are blank or missing");
+            throw new MissingFieldException(emptyFieldsAfterExclusions.toString() + " are blank or missing");
         }
     }
 
     @Override
-    public List<Subject> findSubjectsByName(List<String> subject) {
-     return subjectTransactionAccess.getSubjectByName(subject);
+    public List<SubjectModel> findSubjectsByName(List<String> subject) {
+     return SubjectModel.toModel(subjectTransactionAccess.getSubjectByName(subject));
     }
-
 
     //// Utility methods
 

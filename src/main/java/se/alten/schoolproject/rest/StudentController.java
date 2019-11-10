@@ -37,7 +37,7 @@ public class StudentController {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response showStudents(@QueryParam("name") String name) {
-        List<Student> students;
+        List<StudentModel> students;
         try {
             if(name!=null)
                 students = sal.findStudentsByName(name);

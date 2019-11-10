@@ -25,6 +25,6 @@ public class Subject implements Serializable {
     private String title;
 
     @ManyToMany(mappedBy = "subject", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
-    private Set<Student> students;
+    private Set<Student> students = new HashSet<>();
 
 }

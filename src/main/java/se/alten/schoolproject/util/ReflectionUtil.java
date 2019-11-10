@@ -2,37 +2,39 @@ package se.alten.schoolproject.util;
 
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.HashSet;
+import java.util.Set;
+
 
 public class ReflectionUtil {
 
 
 
-    public static List<String> listNullOrEmptyFields(Object object, List<String> excludedFields){
+    public static Set<String> listNullOrEmptyFields(Object object){
+        if(object==null)
+            throw new IllegalArgumentException("null value in listNullOrEmptyFields");
 
-
-        List<String> results = new ArrayList<>();
+        Set<String> results = new HashSet<>();
         for (Field f : object.getClass().getDeclaredFields()) {
             f.setAccessible(true);
             try {
                 if (f.get(object) == null || f.get(object) instanceof String && ((String) f.get(object)).isBlank()) {
-                    AtomicBoolean shouldAdd = new AtomicBoolean(true);
-                   excludedFields.forEach(excludedField -> {
-                      if(excludedField.equals(f.getName())){
-                         shouldAdd.set(false);
-                      }
-                   });
-                   if(shouldAdd.get()){
-                       results.add(f.getName());
-                   }
-
+                    results.add(f.getName());
                 }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }
         return results;
+    }
+
+    public static Set<String> removeExceptionsFromSet(Set<String> emptyOrNullSet, Set<String> excludedFields){
+        if(emptyOrNullSet==null || excludedFields==null)
+            throw new IllegalArgumentException("null value in removeExceptionsFromSet()");
+         else {
+            emptyOrNullSet.removeAll(excludedFields);
+            return emptyOrNullSet;
+        }
+
     }
 }
