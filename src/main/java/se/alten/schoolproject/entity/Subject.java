@@ -6,6 +6,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -21,10 +22,20 @@ public class Subject implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "uuid", unique = true)
+    private String uuid;
+
     @Column
     private String title;
 
     @ManyToMany(mappedBy = "subject", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     private Set<Student> students = new HashSet<>();
+
+    @PrePersist
+    public void initializeUUID() {
+        if (getUuid() == null) {
+            setUuid(UUID.randomUUID().toString());
+        }
+    }
 
 }

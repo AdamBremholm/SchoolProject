@@ -24,6 +24,9 @@ public class Student implements Serializable {
     @Column(name="id")
     private Long id;
 
+    @Column(name = "uuid", unique = true)
+    private String uuid;
+
     @Column(name = "forename")
     private String forename;
 
@@ -33,7 +36,7 @@ public class Student implements Serializable {
     @Column(name = "email", unique = true)
     private String email;
 
-    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     @JoinTable(name = "student_subject",
             joinColumns=@JoinColumn(name="stud_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "subj_id", referencedColumnName = "id"))
@@ -49,4 +52,11 @@ public class Student implements Serializable {
        boolean lastNameExists =  Optional.of(this).map(Student::getLastname).filter(Predicate.not(String::isBlank)).isPresent();
        return emailExists && forenameExists && lastNameExists;
    }
+
+    @PrePersist
+    public void initializeUUID() {
+        if (getUuid() == null) {
+            setUuid(UUID.randomUUID().toString());
+        }
+    }
 }

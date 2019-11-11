@@ -39,7 +39,7 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     @Override
     public StudentModel addStudent(Student studentToAdd) {
         Set<String> emptyFields = ReflectionUtil.listNullOrEmptyFields(studentToAdd);
-        Set<String> emptyFieldsAfterExclusions = ReflectionUtil.removeExceptionsFromSet(emptyFields, Set.of("id", "subject", "subjects"));
+        Set<String> emptyFieldsAfterExclusions = ReflectionUtil.removeExceptionsFromSet(emptyFields, Set.of("id", "uuid", "subject", "subjects"));
         if (emptyFieldsAfterExclusions.isEmpty()) {
             Student addedStudent = studentTransactionAccess.addStudent(studentToAdd);
             if (!emptyFields.contains("subjects")) {
@@ -109,7 +109,7 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     @Override
     public SubjectModel addSubject(Subject subjectToAdd) {
         Set<String> emptyFields = ReflectionUtil.listNullOrEmptyFields(subjectToAdd);
-        Set<String> emptyFieldsAfterExclusions = ReflectionUtil.removeExceptionsFromSet(emptyFields, Set.of("id"));
+        Set<String> emptyFieldsAfterExclusions = ReflectionUtil.removeExceptionsFromSet(emptyFields, Set.of("id", "uuid"));
         if (emptyFieldsAfterExclusions.isEmpty()) {
             Subject addedSubject = subjectTransactionAccess.addSubject(subjectToAdd);
             return SubjectModel.toModel(addedSubject);

@@ -18,6 +18,7 @@ public class StudentModel implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private Long id;
+    private String uuid;
     private String forename;
     private String lastname;
     private String email;
@@ -26,15 +27,12 @@ public class StudentModel implements Serializable {
     public static StudentModel toModel(Student student) {
         StudentModel studentModel = new StudentModel();
         Optional<Student> studentOptional = Optional.ofNullable(student);
-        if(studentOptional.isPresent()) {
-           studentOptional.map(Student::getId).ifPresent(studentModel::setId);
-           studentOptional.map(Student::getForename).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setForename);
-           studentOptional.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setLastname);
-           studentOptional.map(Student::getEmail).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setEmail);
-           studentOptional.map(Student::getSubject).ifPresent(sub -> sub.forEach(s -> studentModel.getSubjects().add(s.getTitle())));
-           return studentModel;
-        } else
-            throw new IllegalArgumentException("student not present in toModel");
+       studentOptional.map(Student::getUuid).ifPresent(studentModel::setUuid);
+       studentOptional.map(Student::getForename).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setForename);
+       studentOptional.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setLastname);
+       studentOptional.map(Student::getEmail).filter(Predicate.not(String::isBlank)).ifPresent(studentModel::setEmail);
+       studentOptional.map(Student::getSubject).ifPresent(sub -> sub.forEach(s -> studentModel.getSubjects().add(s.getTitle())));
+       return studentModel;
     }
 
     public static List<StudentModel> toModel(List<Student> students){

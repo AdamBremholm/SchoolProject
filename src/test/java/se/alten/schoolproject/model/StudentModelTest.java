@@ -17,7 +17,7 @@ public class StudentModelTest {
     public void toModel() {
         Set<Subject> subject = new HashSet<>();
         List<String> subjects = new ArrayList<>();
-        Student student = new Student(1L, null, "christofferson", "", subject, subjects);
+        Student student = new Student(1L, "abc", null, "christofferson", "", subject, subjects);
         StudentModel studentModel = StudentModel.toModel(student);
         assertEquals("christofferson", studentModel.getLastname());
 

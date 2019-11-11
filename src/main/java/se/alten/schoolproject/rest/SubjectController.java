@@ -39,7 +39,7 @@ public class SubjectController {
             SubjectModel subjectModel = sal.addSubject(subject);
             return Response.ok(subjectModel).build();
         } catch (Exception e ) {
-            return Response.status(404).build();
+            return Response.status(404).entity(e.getCause().toString()).build();
         }
     }
 }
