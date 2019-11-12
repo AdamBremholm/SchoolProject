@@ -4,6 +4,7 @@ import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.exceptions.MissingFieldException;
 import se.alten.schoolproject.exceptions.NoSuchIdException;
+import se.alten.schoolproject.exceptions.NoSuchSubjectException;
 import se.alten.schoolproject.exceptions.WrongHttpMethodException;
 import se.alten.schoolproject.model.StudentModel;
 import se.alten.schoolproject.model.SubjectModel;
@@ -12,6 +13,7 @@ import se.alten.schoolproject.transaction.SubjectTransactionAccess;
 import se.alten.schoolproject.util.ReflectionUtil;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -43,7 +45,13 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
         if (emptyFieldsAfterExclusions.isEmpty()) {
             Student addedStudent = studentTransactionAccess.addStudent(studentToAdd);
             if (!emptyFields.contains("subjects")) {
+
                 List<Subject> subjects = subjectTransactionAccess.getSubjectByName(studentToAdd.getSubjects());
+                List<String> notfoundSubjects = compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(studentToAdd.getSubjects(),subjects);
+                if(!notfoundSubjects.isEmpty()){
+                    throw new NoSuchSubjectException("the subjects: " + notfoundSubjects.toString() + " where not found in the database, add them as subjects before using them here");
+                }
+
                                 subjects.forEach(sub -> {
                     addedStudent.getSubject().add(sub);
                 });
@@ -59,24 +67,24 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     }
 
     @Override
-    public void removeStudent(Long id) {
-       Student foundStudent = studentTransactionAccess.findStudentById(id).orElseThrow(NoSuchIdException::new);
+    public void removeStudent(String uuid) {
+       Student foundStudent = studentTransactionAccess.findStudentByUuid(uuid).orElseThrow(NoSuchIdException::new);
        studentTransactionAccess.removeStudent(foundStudent);
 
     }
 
     @Override
-    public StudentModel updateStudentPartial(Long id, Student updateInfo) {
-        Student foundStudent = studentTransactionAccess.findStudentById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
+    public StudentModel updateStudentPartial(String uuid, Student updateInfo) {
+        Student foundStudent = studentTransactionAccess.findStudentByUuid(uuid).orElseThrow(() -> new NoSuchIdException("No student with uuid: " +uuid+  " found"));
         updateTargetFieldIfRequestFieldIsPresentAndNotBlank(foundStudent, updateInfo);
-        studentTransactionAccess.updateStudent(foundStudent);
-        return findStudentById(id);
+        return StudentModel.toModel(studentTransactionAccess.updateStudent(foundStudent));
+
     }
 
 
     @Override
-    public StudentModel findStudentById(Long id) {
-        Student result = studentTransactionAccess.findStudentById(id).orElseThrow(NoSuchIdException::new);
+    public StudentModel findStudentByUuid(String uuid) {
+        Student result = studentTransactionAccess.findStudentByUuid(uuid).orElseThrow(NoSuchIdException::new);
         return StudentModel.toModel(result);
     }
 
@@ -87,16 +95,27 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     }
 
     @Override
-    public StudentModel updateStudentFull(Long id, Student student) {
-        if(student.allFieldsExistsAndNotEmpty()) {
-            studentTransactionAccess.findStudentById(id).orElseThrow(() -> new NoSuchIdException("No student with id: " +id+  " found"));
-            student.setId(id);
-            studentTransactionAccess.updateStudent(student);
-            return findStudentById(id);
+    public StudentModel updateStudentFull(String uuid, Student student) {
+        if(student.allMutableFieldsExistsAndNotEmpty()) {
+            Student foundStudent = studentTransactionAccess.findStudentByUuid(uuid).orElseThrow(() -> new NoSuchIdException("No student with uuid: " +uuid+  " found"));
+            student.setId(foundStudent.getId());
+            student.setUuid(uuid);
+            List<Subject> subjects = subjectTransactionAccess.getSubjectByName(student.getSubjects());
+            List<String> notfoundSubjects = compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(student.getSubjects(),subjects);
+            if(!notfoundSubjects.isEmpty()){
+                throw new NoSuchSubjectException("the subjects: " + notfoundSubjects.toString() + " where not found in the database, add them as subjects before using them here");
+            }
+            subjects.forEach(sub -> {
+                foundStudent.getSubject().add(sub);
+            });
+
+           return StudentModel.toModel(studentTransactionAccess.updateStudent(student));
         }
         else
             throw new WrongHttpMethodException("use http PATCH for partial updates");
     }
+
+
 
     ///// Subject Methods
 
@@ -131,10 +150,37 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
             optUpdateInfo.map(Student::getEmail).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setEmail);
             optUpdateInfo.map(Student::getForename).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setForename);
             optUpdateInfo.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setLastname);
+            if(optUpdateInfo.map(Student::getSubjects).filter(Predicate.not(List::isEmpty)).isPresent()){
+
+                List<Subject> subjects = subjectTransactionAccess.getSubjectByName(optUpdateInfo.get().getSubjects());
+                subjects.forEach(sub -> {
+                    foundStudent.getSubject().add(sub);
+                });
+
+            }
         }
         else
             throw new IllegalArgumentException("updateInfo is null in update");
     }
+
+    private List<String> compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(List<String> stringSubjects, List<Subject> dbSubjects) {
+        List<String> dbSubjectsTitleList = new ArrayList<>();
+        if(dbSubjects!=null){
+            dbSubjects.forEach(s-> Optional.ofNullable(s).map(Subject::getTitle).ifPresent(dbSubjectsTitleList::add));
+        }
+       stringSubjects.removeAll(dbSubjectsTitleList);
+       return stringSubjects;
+    }
+
+    private void checkForSubjectsNotFoundInDbAndThrowException(Student student){
+        List<Subject> subjects = subjectTransactionAccess.getSubjectByName(student.getSubjects());
+        List<String> notfoundSubjects = compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(student.getSubjects(),subjects);
+        if(!notfoundSubjects.isEmpty()){
+            throw new NoSuchSubjectException("the subjects: " + notfoundSubjects.toString() + " where not found in the database, add them as subjects before using them here");
+        }
+    }
+
+
 
 
 

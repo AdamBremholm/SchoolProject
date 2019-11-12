@@ -3,10 +3,7 @@ package se.alten.schoolproject.rest;
 import lombok.NoArgsConstructor;
 import se.alten.schoolproject.dao.SchoolAccessLocal;
 import se.alten.schoolproject.entity.Student;
-import se.alten.schoolproject.exceptions.DuplicateException;
-import se.alten.schoolproject.exceptions.MissingFieldException;
-import se.alten.schoolproject.exceptions.NoSuchIdException;
-import se.alten.schoolproject.exceptions.WrongHttpMethodException;
+import se.alten.schoolproject.exceptions.*;
 import se.alten.schoolproject.model.StudentModel;
 
 import javax.ejb.EJBException;
@@ -47,21 +44,28 @@ public class StudentController {
             students.forEach(System.out::println);
 
             return Response.ok(students).build();
-        } catch ( Exception e ) {
+        }
+        catch ( EJBException e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
+        }
+        catch ( Exception e ) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e+"\"}").build();
         }
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{id}")
-    public Response getStudentById(@PathParam("id")Long id) {
+    @Path("{uuid}")
+    public Response getStudentById(@PathParam("uuid")String uuid) {
         try {
-            StudentModel result = sal.findStudentById(id);
+            StudentModel result = sal.findStudentByUuid(uuid);
             return Response.ok(result).build();
         }
         catch (NoSuchIdException e ) {
             return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
+        }
+        catch ( EJBException e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
         }
 
         catch ( Exception e ) {
@@ -81,7 +85,7 @@ public class StudentController {
         catch ( DuplicateException e ) {
             return Response.status(Response.Status.CONFLICT).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
         }
-        catch ( MissingFieldException e ) {
+        catch ( NoSuchSubjectException | MissingFieldException e ) {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getMessage()+"\"}").build();
         }
         catch ( EJBException e ) {
@@ -93,14 +97,17 @@ public class StudentController {
     }
 
     @DELETE
-    @Path("{id}")
-    public Response deleteUser(@PathParam("id") Long id) {
+    @Path("{uuid}")
+    public Response deleteUser(@PathParam("uuid") String uuid) {
         try {
-            sal.removeStudent(id);
+            sal.removeStudent(uuid);
             return Response.status(Response.Status.NO_CONTENT).build();
         }
         catch ( NoSuchIdException e ) {
             return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
+        }
+        catch ( EJBException e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
         }
         catch ( Exception e ) {
             return Response.notModified(e.toString()).status(Response.Status.BAD_GATEWAY).build();
@@ -110,17 +117,23 @@ public class StudentController {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{id}")
-    public Response replaceStudent(@PathParam("id") Long id, Student student) {
+    @Path("{uuid}")
+    public Response replaceStudent(@PathParam("uuid") String uuid, Student student) {
        try {
-          StudentModel result = sal.updateStudentFull(id, student);
+          StudentModel result = sal.updateStudentFull(uuid, student);
            return Response.ok(result).build();
        }
        catch ( NoSuchIdException e ) {
            return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
        }
+       catch ( NoSuchSubjectException e ) {
+           return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getMessage()+"\"}").build();
+       }
        catch ( WrongHttpMethodException e ) {
            return Response.status(Response.Status.METHOD_NOT_ALLOWED).entity("{\""+e.getClass().getSimpleName()+": " + e.getMessage()+"\"}").build();
+       }
+       catch ( EJBException e ) {
+           return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
        }
        catch (Exception e) {
            return Response.notModified(e.toString()).status(Response.Status.BAD_GATEWAY).build();
@@ -130,14 +143,20 @@ public class StudentController {
     @PATCH
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{id}")
-    public Response updateStudentPartial(@PathParam("id") Long id, Student student) {
+    @Path("{uuid}")
+    public Response updateStudentPartial(@PathParam("uuid") String uuid, Student student) {
         try {
-            StudentModel result = sal.updateStudentPartial(id, student);
+            StudentModel result = sal.updateStudentPartial(uuid, student);
             return Response.ok(result).build();
         }
         catch ( NoSuchIdException e ) {
             return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
+        }
+        catch ( NoSuchSubjectException e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getMessage()+"\"}").build();
+        }
+        catch ( EJBException e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
         }
         catch (Exception e) {
             return Response.notModified(e.toString()).status(Response.Status.BAD_GATEWAY).build();

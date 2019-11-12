@@ -11,8 +11,9 @@ public interface StudentTransactionAccess {
     List<Student> listStudents();
     Student addStudent(Student student);
     void removeStudent(Student student);
-    void updateStudent(Student updateInfo);
+    Student updateStudent(Student updateInfo);
     Optional<Student> findStudentById(Long id);
+    Optional<Student> findStudentByUuid(String uuid);
     List<Student> findStudentByName(String name);
     default Optional<Student> findStudentByEmail(String email) {
         return Optional.empty();

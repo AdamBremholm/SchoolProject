@@ -1,6 +1,7 @@
 package se.alten.schoolproject.transaction;
 
 
+import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.exceptions.DuplicateException;
 
@@ -8,6 +9,7 @@ import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
 import javax.persistence.*;
 import java.util.List;
+import java.util.Optional;
 
 
 @Stateless
@@ -41,5 +43,10 @@ public class SubjectTransaction implements SubjectTransactionAccess{
         query.setParameter("subject", subject);
 
         return query.getResultList();
+    }
+
+    public Optional<Subject> findSubjectByUuid(String uuid) {
+        TypedQuery<Subject> query = entityManager.createQuery("SELECT s from Subject s WHERE s.uuid = :uuid", Subject.class);
+        return Optional.ofNullable(query.setParameter("uuid", uuid).getSingleResult());
     }
 }

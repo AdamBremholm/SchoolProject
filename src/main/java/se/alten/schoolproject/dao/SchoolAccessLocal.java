@@ -15,15 +15,15 @@ public interface SchoolAccessLocal {
 
     StudentModel addStudent(Student student);
 
-    void removeStudent(Long id);
+    void removeStudent(String uuid);
 
-    StudentModel updateStudentPartial(Long id, Student student);
+    StudentModel updateStudentPartial(String uuid, Student student);
 
-    StudentModel findStudentById(Long id);
+    StudentModel findStudentByUuid(String uuid);
 
     List<StudentModel> findStudentsByName(String name);
 
-    StudentModel updateStudentFull(Long id, Student student);
+    StudentModel updateStudentFull(String uuid, Student student);
 
     List<SubjectModel> listAllSubjects();
 

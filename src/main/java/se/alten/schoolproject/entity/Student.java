@@ -46,11 +46,12 @@ public class Student implements Serializable {
     private List<String> subjects = new ArrayList<>();
 
 
-    public boolean allFieldsExistsAndNotEmpty() {
+    public boolean allMutableFieldsExistsAndNotEmpty() {
        boolean emailExists =  Optional.of(this).map(Student::getEmail).filter(Predicate.not(String::isBlank)).isPresent();
        boolean forenameExists =  Optional.of(this).map(Student::getForename).filter(Predicate.not(String::isBlank)).isPresent();
        boolean lastNameExists =  Optional.of(this).map(Student::getLastname).filter(Predicate.not(String::isBlank)).isPresent();
-       return emailExists && forenameExists && lastNameExists;
+       boolean subjectsExists =  Optional.of(this).map(Student::getSubjects).filter(Predicate.not(List::isEmpty)).isPresent();
+       return emailExists && forenameExists && lastNameExists && subjectsExists;
    }
 
     @PrePersist

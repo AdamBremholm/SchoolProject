@@ -46,6 +46,12 @@ public class StudentTransaction implements StudentTransactionAccess {
     }
 
     @Override
+    public Optional<Student> findStudentByUuid(String uuid) {
+        TypedQuery<Student> query = entityManager.createQuery("SELECT s from Student s WHERE s.uuid = :uuid", Student.class);
+        return Optional.ofNullable(query.setParameter("uuid", uuid).getSingleResult());
+    }
+
+    @Override
     public List<Student> findStudentByName(String name) {
        TypedQuery<Student> query = entityManager.createQuery("SELECT s from Student s WHERE s.forename = :name OR s.lastname = :name", Student.class);
        query.setParameter("name", name);
@@ -67,9 +73,10 @@ public class StudentTransaction implements StudentTransactionAccess {
     }
 
     @Override
-    public void updateStudent(Student updateInfo) {
+    public Student updateStudent(Student updateInfo) {
         entityManager.merge(updateInfo);
         entityManager.flush();
+        return updateInfo;
      }
 
 
