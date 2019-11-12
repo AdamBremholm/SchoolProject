@@ -45,14 +45,8 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
         if (emptyFieldsAfterExclusions.isEmpty()) {
             Student addedStudent = studentTransactionAccess.addStudent(studentToAdd);
             if (!emptyFields.contains("subjects")) {
-
-                List<Subject> subjects = subjectTransactionAccess.getSubjectByName(studentToAdd.getSubjects());
-                List<String> notfoundSubjects = compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(studentToAdd.getSubjects(),subjects);
-                if(!notfoundSubjects.isEmpty()){
-                    throw new NoSuchSubjectException("the subjects: " + notfoundSubjects.toString() + " where not found in the database, add them as subjects before using them here");
-                }
-
-                                subjects.forEach(sub -> {
+                List<Subject> subjects = getSubjectsFromDbThatMatchesSubjectList(studentToAdd);
+                subjects.forEach(sub -> {
                     addedStudent.getSubject().add(sub);
                 });
 
@@ -100,11 +94,7 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
             Student foundStudent = studentTransactionAccess.findStudentByUuid(uuid).orElseThrow(() -> new NoSuchIdException("No student with uuid: " +uuid+  " found"));
             student.setId(foundStudent.getId());
             student.setUuid(uuid);
-            List<Subject> subjects = subjectTransactionAccess.getSubjectByName(student.getSubjects());
-            List<String> notfoundSubjects = compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(student.getSubjects(),subjects);
-            if(!notfoundSubjects.isEmpty()){
-                throw new NoSuchSubjectException("the subjects: " + notfoundSubjects.toString() + " where not found in the database, add them as subjects before using them here");
-            }
+            List<Subject> subjects = getSubjectsFromDbThatMatchesSubjectList(student);
             subjects.forEach(sub -> {
                 foundStudent.getSubject().add(sub);
             });
@@ -163,6 +153,20 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
             throw new IllegalArgumentException("updateInfo is null in update");
     }
 
+
+    private void handleMismatchErrorsInSubjectsStringListAndDb(Student student, List<Subject> subjects){
+        List<String> notfoundSubjects = compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(student.getSubjects(),subjects);
+        if(!notfoundSubjects.isEmpty()){
+            throw new NoSuchSubjectException("the subjects: " + notfoundSubjects.toString() + " where not found in the database, add them as subjects before using them here");
+        }
+    }
+    private List<Subject> getSubjectsFromDbThatMatchesSubjectList(Student student){
+        Optional.ofNullable(student).map(Student::getSubjects).orElseThrow(MissingFieldException::new);
+        List<Subject> subjects = subjectTransactionAccess.getSubjectByName(student.getSubjects());
+        handleMismatchErrorsInSubjectsStringListAndDb(student, subjects);
+        return subjects;
+    }
+
     private List<String> compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(List<String> stringSubjects, List<Subject> dbSubjects) {
         List<String> dbSubjectsTitleList = new ArrayList<>();
         if(dbSubjects!=null){
@@ -172,13 +176,7 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
        return stringSubjects;
     }
 
-    private void checkForSubjectsNotFoundInDbAndThrowException(Student student){
-        List<Subject> subjects = subjectTransactionAccess.getSubjectByName(student.getSubjects());
-        List<String> notfoundSubjects = compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(student.getSubjects(),subjects);
-        if(!notfoundSubjects.isEmpty()){
-            throw new NoSuchSubjectException("the subjects: " + notfoundSubjects.toString() + " where not found in the database, add them as subjects before using them here");
-        }
-    }
+
 
 
 
