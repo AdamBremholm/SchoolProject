@@ -2,7 +2,10 @@ package se.alten.schoolproject.transaction;
 
 
 import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.exceptions.DuplicateException;
+import se.alten.schoolproject.exceptions.MissingFieldException;
+import se.alten.schoolproject.exceptions.NoSuchIdException;
 
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
@@ -10,8 +13,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 
 @Stateless
@@ -74,8 +79,19 @@ public class StudentTransaction implements StudentTransactionAccess {
 
     @Override
     public Student updateStudent(Student updateInfo) {
+        System.out.println("yoyo");
+        Set<Subject> updateSubjects = new HashSet<>();
+        updateSubjects.addAll(updateInfo.getSubject());
+        updateSubjects.forEach(s -> System.out.println(s.getTitle()));
+       Student foundStudent = findStudentById(updateInfo.getId()).orElseThrow(NoSuchIdException::new);
+       Set<Subject> foundSubjects =  Optional.ofNullable(foundStudent).map(Student::getSubject).orElseThrow(MissingFieldException::new);
+        foundSubjects.clear();
+        foundSubjects.addAll(updateSubjects);
+        System.out.println("456");
         entityManager.merge(updateInfo);
+        System.out.println("101123");
         entityManager.flush();
+        System.out.println("1314415");
         return updateInfo;
      }
 

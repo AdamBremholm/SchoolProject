@@ -36,7 +36,7 @@ public class Student implements Serializable {
     @Column(name = "email", unique = true)
     private String email;
 
-    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JoinTable(name = "student_subject",
             joinColumns=@JoinColumn(name="stud_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "subj_id", referencedColumnName = "id"))

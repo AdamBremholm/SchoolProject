@@ -4,7 +4,6 @@ import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.exceptions.MissingFieldException;
 import se.alten.schoolproject.exceptions.NoSuchIdException;
-import se.alten.schoolproject.exceptions.NoSuchSubjectException;
 import se.alten.schoolproject.exceptions.WrongHttpMethodException;
 import se.alten.schoolproject.model.StudentModel;
 import se.alten.schoolproject.model.SubjectModel;
@@ -13,10 +12,7 @@ import se.alten.schoolproject.transaction.SubjectTransactionAccess;
 import se.alten.schoolproject.util.ReflectionUtil;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 @Stateless
@@ -43,15 +39,14 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
         Set<String> emptyFields = ReflectionUtil.listNullOrEmptyFields(studentToAdd);
         Set<String> emptyFieldsAfterExclusions = ReflectionUtil.removeExceptionsFromSet(emptyFields, Set.of("id", "uuid", "subject", "subjects"));
         if (emptyFieldsAfterExclusions.isEmpty()) {
-            Student addedStudent = studentTransactionAccess.addStudent(studentToAdd);
+
             if (!emptyFields.contains("subjects")) {
-                List<Subject> subjects = getSubjectsFromDbThatMatchesSubjectList(studentToAdd);
+                List<Subject> subjects = fetchAndCreateSubjects(studentToAdd);
                 subjects.forEach(sub -> {
-                    addedStudent.getSubject().add(sub);
+                    studentToAdd.getSubject().add(sub);
                 });
-
-
             }
+            Student addedStudent = studentTransactionAccess.addStudent(studentToAdd);
 
             return StudentModel.toModel(addedStudent);
 
@@ -70,8 +65,9 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     @Override
     public StudentModel updateStudentPartial(String uuid, Student updateInfo) {
         Student foundStudent = studentTransactionAccess.findStudentByUuid(uuid).orElseThrow(() -> new NoSuchIdException("No student with uuid: " +uuid+  " found"));
+        System.out.println("updateStudentpartial subjects: " + updateInfo.getSubjects().toString());
         updateTargetFieldIfRequestFieldIsPresentAndNotBlank(foundStudent, updateInfo);
-        return StudentModel.toModel(studentTransactionAccess.updateStudent(foundStudent));
+               return StudentModel.toModel(studentTransactionAccess.updateStudent(foundStudent));
 
     }
 
@@ -94,10 +90,12 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
             Student foundStudent = studentTransactionAccess.findStudentByUuid(uuid).orElseThrow(() -> new NoSuchIdException("No student with uuid: " +uuid+  " found"));
             student.setId(foundStudent.getId());
             student.setUuid(uuid);
-            List<Subject> subjects = getSubjectsFromDbThatMatchesSubjectList(student);
+            List<Subject> subjects = fetchAndCreateSubjects(student);
             subjects.forEach(sub -> {
                 foundStudent.getSubject().add(sub);
             });
+
+
 
            return StudentModel.toModel(studentTransactionAccess.updateStudent(student));
         }
@@ -142,7 +140,8 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
             optUpdateInfo.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setLastname);
             if(optUpdateInfo.map(Student::getSubjects).filter(Predicate.not(List::isEmpty)).isPresent()){
 
-                List<Subject> subjects = subjectTransactionAccess.getSubjectByName(optUpdateInfo.get().getSubjects());
+                List<Subject> subjects = fetchAndCreateSubjects(optUpdateInfo.get());
+                foundStudent.getSubject().clear();
                 subjects.forEach(sub -> {
                     foundStudent.getSubject().add(sub);
                 });
@@ -154,16 +153,20 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     }
 
 
-    private void handleMismatchErrorsInSubjectsStringListAndDb(Student student, List<Subject> subjects){
+    private void createSubjectsIfNotAlreadyInDb(Student student, List<Subject> subjects){
         List<String> notfoundSubjects = compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(student.getSubjects(),subjects);
         if(!notfoundSubjects.isEmpty()){
-            throw new NoSuchSubjectException("the subjects: " + notfoundSubjects.toString() + " where not found in the database, add them as subjects before using them here");
+            notfoundSubjects.forEach(s -> {
+                Set<Student> students = new HashSet<>();
+                students.add(student);
+                subjects.add(new Subject(null, null, s, students));
+            });
         }
     }
-    private List<Subject> getSubjectsFromDbThatMatchesSubjectList(Student student){
+    private List<Subject> fetchAndCreateSubjects(Student student){
         Optional.ofNullable(student).map(Student::getSubjects).orElseThrow(MissingFieldException::new);
         List<Subject> subjects = subjectTransactionAccess.getSubjectByName(student.getSubjects());
-        handleMismatchErrorsInSubjectsStringListAndDb(student, subjects);
+        createSubjectsIfNotAlreadyInDb(student, subjects);
         return subjects;
     }
 
