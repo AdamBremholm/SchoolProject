@@ -8,8 +8,8 @@ import se.alten.schoolproject.exceptions.DuplicateException;
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
 import javax.persistence.*;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 @Stateless
@@ -48,5 +48,23 @@ public class SubjectTransaction implements SubjectTransactionAccess{
     public Optional<Subject> findSubjectByUuid(String uuid) {
         TypedQuery<Subject> query = entityManager.createQuery("SELECT s from Subject s WHERE s.uuid = :uuid", Subject.class);
         return Optional.ofNullable(query.setParameter("uuid", uuid).getSingleResult());
+    }
+
+    @Override
+    public void deleteOrphanedStudentInNoLongerTakenSubjects(Student foundStudent, Set<Subject> detachedSubjects) {
+
+        CopyOnWriteArrayList<Subject> subjects = new CopyOnWriteArrayList<>(detachedSubjects);
+       for (Subject subject: subjects) {
+           if (subject.getStudents().contains(foundStudent)) {
+               CopyOnWriteArrayList<Student> students = new CopyOnWriteArrayList<>(subject.getStudents());
+               for (Student student : students) {
+                   if (student.getId().equals(foundStudent.getId())) {
+                       students.remove(student);
+                   }
+               }
+           }
+        entityManager.merge(subject);
+        entityManager.flush();
+       }
     }
 }
