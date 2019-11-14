@@ -95,14 +95,8 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
             Student foundStudent = studentTransactionAccess.findStudentByUuid(uuid).orElseThrow(() -> new NoSuchIdException("No student with uuid: " +uuid+  " found"));
             updateInfo.setId(foundStudent.getId());
             updateInfo.setUuid(uuid);
-            List<Subject> dbSubjects = subjectTransactionAccess.getSubjectByName(updateInfo.getSubjects());
-            List<Subject> subjectsToAddGlobally = getSubjectsToAddToDb(updateInfo.getSubjects(), dbSubjects);
-            List<Subject> subjectsToRemoveFromStudent = getSubjectsToRemoveFromStudent(updateInfo.getSubjects(), foundStudent.getSubject());
-            subjectsToAddGlobally.forEach(s -> subjectTransactionAccess.addSubject(s));
-            subjectsToRemoveFromStudent.forEach(s -> studentTransactionAccess.removeSubjectFromStudent(foundStudent, s));
-            List<Subject> allSubjects = subjectTransactionAccess.getSubjectByName(updateInfo.getSubjects());
-            allSubjects.forEach(sub -> foundStudent.getSubject().add(sub));
-           return StudentModel.toModel(studentTransactionAccess.updateStudent(foundStudent));
+            updateSubjectsInDb(updateInfo, foundStudent);
+            return StudentModel.toModel(studentTransactionAccess.updateStudent(foundStudent));
         }
         else
             throw new WrongHttpMethodException("use http PATCH for partial updates");
@@ -144,14 +138,7 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
             optUpdateInfo.map(Student::getForename).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setForename);
             optUpdateInfo.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setLastname);
             if(optUpdateInfo.map(Student::getSubjects).filter(Predicate.not(List::isEmpty)).isPresent()){
-
-                List<Subject> dbSubjects = subjectTransactionAccess.getSubjectByName(updateInfo.getSubjects());
-                List<Subject> subjectsToAddGlobally = getSubjectsToAddToDb(updateInfo.getSubjects(), dbSubjects);
-                List<Subject> subjectsToRemoveFromStudent = getSubjectsToRemoveFromStudent(updateInfo.getSubjects(), foundStudent.getSubject());
-                subjectsToAddGlobally.forEach(s -> subjectTransactionAccess.addSubject(s));
-                subjectsToRemoveFromStudent.forEach(s -> studentTransactionAccess.removeSubjectFromStudent(foundStudent, s));
-                List<Subject> allSubjects = subjectTransactionAccess.getSubjectByName(updateInfo.getSubjects());
-                allSubjects.forEach(sub -> foundStudent.getSubject().add(sub));
+                updateSubjectsInDb(updateInfo, foundStudent);
                 return foundStudent;
 
           }
@@ -188,6 +175,16 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     private void checkIfNullAndThenThrowException(Object object){
         if(object==null)
             throw new IllegalArgumentException();
+    }
+
+    private void updateSubjectsInDb(Student updateInfo, Student foundStudent) {
+        List<Subject> dbSubjects = subjectTransactionAccess.getSubjectByName(updateInfo.getSubjects());
+        List<Subject> subjectsToAddGlobally = getSubjectsToAddToDb(updateInfo.getSubjects(), dbSubjects);
+        List<Subject> subjectsToRemoveFromStudent = getSubjectsToRemoveFromStudent(updateInfo.getSubjects(), foundStudent.getSubject());
+        subjectsToAddGlobally.forEach(s -> subjectTransactionAccess.addSubject(s));
+        subjectsToRemoveFromStudent.forEach(s -> studentTransactionAccess.removeSubjectFromStudent(foundStudent, s));
+        List<Subject> allSubjects = subjectTransactionAccess.getSubjectByName(updateInfo.getSubjects());
+        allSubjects.forEach(sub -> foundStudent.getSubject().add(sub));
     }
 
 
