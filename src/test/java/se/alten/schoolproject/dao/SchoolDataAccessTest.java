@@ -13,7 +13,7 @@ public class SchoolDataAccessTest {
 
         SchoolDataAccess schoolDataAccess = new SchoolDataAccess();
         List<String> strings = List.of("historia", "matte");
-        Set<Subject> subjects = Set.of(new Subject(null, null, "vg", null));
+        Set<Subject> subjects = Set.of(new Subject(null, null, "vg", null, null));
         System.out.println(schoolDataAccess.getSubjectsToRemoveFromStudent(strings, subjects));
     }
 
@@ -23,7 +23,7 @@ public class SchoolDataAccessTest {
 
         SchoolDataAccess schoolDataAccess = new SchoolDataAccess();
         List<String> strings = List.of("historia", "matte");
-        List<Subject> subjects = List.of(new Subject(null, null, "historia", null));
+        List<Subject> subjects = List.of(new Subject(null, null, "historia", null, null));
         System.out.println(schoolDataAccess.getSubjectsToAddToDb(strings, subjects));
     }
 

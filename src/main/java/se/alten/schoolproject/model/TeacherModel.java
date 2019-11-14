@@ -23,7 +23,7 @@ public class TeacherModel {
         Optional.ofNullable(teacher).map(Teacher::getId).ifPresent(teacherModel::setId);
         Optional.ofNullable(teacher).map(Teacher::getForename).ifPresent(teacherModel::setUuid);
         Optional.ofNullable(teacher).map(Teacher::getLastname).ifPresent(teacherModel::setLastname);
-        Optional.ofNullable(teacher).map(Teacher::getSubjects).ifPresent(s -> s.forEach(su -> teacherModel.getSubjects().add(su.getTitle())));
+        Optional.ofNullable(teacher).map(Teacher::getSubject).ifPresent(s -> s.forEach(su -> teacherModel.getSubjects().add(su.getTitle())));
         return teacherModel;
     }
 
