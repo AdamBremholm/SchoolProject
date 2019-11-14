@@ -149,7 +149,11 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
 
                 List<Subject> subjects = fetchAndCreateSubjects(updateInfo);
                 subjects.forEach(s -> System.out.println("returned subjects 2: " + s.getTitle()));
-                System.out.println("kubernetes");
+                System.out.println("asb");
+                //1.Hämta subjects om finns i db
+                //2. Om det finns nya subjects med i request skapa dom i db //behöver inte ha med students
+                //3. Om subjects ska tas bort
+
                 Set<Subject> subjectsNoLongerTakenByStudent = getSubjectsDiff(updateInfo.getSubjects(),foundStudent.getSubject());
                 subjectTransactionAccess.deleteOrphanedStudentInNoLongerTakenSubjects(foundStudent, subjectsNoLongerTakenByStudent);
                 foundStudent.getSubject().clear();
