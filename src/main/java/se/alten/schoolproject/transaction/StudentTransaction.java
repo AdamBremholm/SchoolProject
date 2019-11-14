@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 @Stateless
@@ -68,6 +69,20 @@ public class StudentTransaction implements StudentTransactionAccess {
         TypedQuery<Student> query = entityManager.createQuery("SELECT s from Student s WHERE s.email = :email", Student.class);
         query.setParameter("email", email);
         return Optional.ofNullable(query.getSingleResult());
+    }
+
+    @Override
+    public void removeSubjectFromStudent(Student foundStudent, Subject su) {
+
+        TypedQuery<Student> query = entityManager.createQuery("SELECT s from Student s join fetch s.subject WHERE s.id = :id", Student.class);
+       query.setParameter("id", foundStudent.getId());
+       Student target = query.getSingleResult();
+       target.getSubject().removeIf(ts -> ts.getId().equals(su.getId()));
+       target.getSubject().forEach(s -> System.out.println(s.getTitle()));
+       entityManager.merge(target);
+       entityManager.flush();
+
+
     }
 
 

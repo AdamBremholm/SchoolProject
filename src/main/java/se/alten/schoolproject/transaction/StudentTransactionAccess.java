@@ -1,6 +1,7 @@
 package se.alten.schoolproject.transaction;
 
 import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.entity.Subject;
 
 import javax.ejb.Local;
 import java.util.List;
@@ -18,4 +19,6 @@ public interface StudentTransactionAccess {
     default Optional<Student> findStudentByEmail(String email) {
         return Optional.empty();
     }
+
+    void removeSubjectFromStudent(Student foundStudent, Subject s);
 }

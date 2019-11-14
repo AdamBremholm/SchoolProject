@@ -12,7 +12,6 @@ import se.alten.schoolproject.transaction.SubjectTransactionAccess;
 import se.alten.schoolproject.util.ReflectionUtil;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import java.sql.SQLOutput;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -43,8 +42,11 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
         if (emptyFieldsAfterExclusions.isEmpty()) {
 
             if (!emptyFields.contains("subjects")) {
-                List<Subject> subjects = fetchAndCreateSubjects(studentToAdd);
-                subjects.forEach(sub -> {
+                List<Subject> dbSubjects = subjectTransactionAccess.getSubjectByName(studentToAdd.getSubjects());
+                List<Subject> subjectsToAddGlobally = getSubjectsToAddToDb(studentToAdd.getSubjects(), dbSubjects);
+                subjectsToAddGlobally.forEach(s -> subjectTransactionAccess.addSubject(s));
+                List<Subject> allSubjects = subjectTransactionAccess.getSubjectByName(studentToAdd.getSubjects());
+                allSubjects.forEach(sub -> {
                     studentToAdd.getSubject().add(sub);
                 });
             }
@@ -88,23 +90,19 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
     }
 
     @Override
-    public StudentModel updateStudentFull(String uuid, Student student) {
-        if(student.allMutableFieldsExistsAndNotEmpty()) {
+    public StudentModel updateStudentFull(String uuid, Student updateInfo) {
+        if(updateInfo.allMutableFieldsExistsAndNotEmpty()) {
             Student foundStudent = studentTransactionAccess.findStudentByUuid(uuid).orElseThrow(() -> new NoSuchIdException("No student with uuid: " +uuid+  " found"));
-            student.setId(foundStudent.getId());
-            student.setUuid(uuid);
-            List<Subject> subjects = fetchAndCreateSubjects(student);
-            Set<Subject> subjectsNoLongerTakenByStudent = getSubjectsDiff(student.getSubjects(),foundStudent.getSubject());
-            subjectTransactionAccess.deleteOrphanedStudentInNoLongerTakenSubjects(foundStudent, subjectsNoLongerTakenByStudent);
-            foundStudent.getSubject().clear();
-            subjects.forEach(s -> foundStudent.getSubject().add(s));
-            subjects.forEach(sub -> {
-                foundStudent.getSubject().add(sub);
-            });
-
-
-
-           return StudentModel.toModel(studentTransactionAccess.updateStudent(student));
+            updateInfo.setId(foundStudent.getId());
+            updateInfo.setUuid(uuid);
+            List<Subject> dbSubjects = subjectTransactionAccess.getSubjectByName(updateInfo.getSubjects());
+            List<Subject> subjectsToAddGlobally = getSubjectsToAddToDb(updateInfo.getSubjects(), dbSubjects);
+            List<Subject> subjectsToRemoveFromStudent = getSubjectsToRemoveFromStudent(updateInfo.getSubjects(), foundStudent.getSubject());
+            subjectsToAddGlobally.forEach(s -> subjectTransactionAccess.addSubject(s));
+            subjectsToRemoveFromStudent.forEach(s -> studentTransactionAccess.removeSubjectFromStudent(foundStudent, s));
+            List<Subject> allSubjects = subjectTransactionAccess.getSubjectByName(updateInfo.getSubjects());
+            allSubjects.forEach(sub -> foundStudent.getSubject().add(sub));
+           return StudentModel.toModel(studentTransactionAccess.updateStudent(foundStudent));
         }
         else
             throw new WrongHttpMethodException("use http PATCH for partial updates");
@@ -139,7 +137,7 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
 
     //// Utility methods
 
-    private void updateTargetFieldIfRequestFieldIsPresentAndNotBlank(Student foundStudent, Student updateInfo) {
+    private Student updateTargetFieldIfRequestFieldIsPresentAndNotBlank(Student foundStudent, Student updateInfo) {
         Optional<Student> optUpdateInfo = Optional.ofNullable(updateInfo);
         if (optUpdateInfo.isPresent()) {
             optUpdateInfo.map(Student::getEmail).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setEmail);
@@ -147,58 +145,53 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
             optUpdateInfo.map(Student::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(foundStudent::setLastname);
             if(optUpdateInfo.map(Student::getSubjects).filter(Predicate.not(List::isEmpty)).isPresent()){
 
-                List<Subject> subjects = fetchAndCreateSubjects(updateInfo);
-                subjects.forEach(s -> System.out.println("returned subjects 2: " + s.getTitle()));
-                System.out.println("asb");
-                //1.Hämta subjects om finns i db
-                //2. Om det finns nya subjects med i request skapa dom i db //behöver inte ha med students
-                //3. Om subjects ska tas bort
+                List<Subject> dbSubjects = subjectTransactionAccess.getSubjectByName(updateInfo.getSubjects());
+                List<Subject> subjectsToAddGlobally = getSubjectsToAddToDb(updateInfo.getSubjects(), dbSubjects);
+                List<Subject> subjectsToRemoveFromStudent = getSubjectsToRemoveFromStudent(updateInfo.getSubjects(), foundStudent.getSubject());
+                subjectsToAddGlobally.forEach(s -> subjectTransactionAccess.addSubject(s));
+                subjectsToRemoveFromStudent.forEach(s -> studentTransactionAccess.removeSubjectFromStudent(foundStudent, s));
+                List<Subject> allSubjects = subjectTransactionAccess.getSubjectByName(updateInfo.getSubjects());
+                allSubjects.forEach(sub -> foundStudent.getSubject().add(sub));
+                return foundStudent;
 
-                Set<Subject> subjectsNoLongerTakenByStudent = getSubjectsDiff(updateInfo.getSubjects(),foundStudent.getSubject());
-                subjectTransactionAccess.deleteOrphanedStudentInNoLongerTakenSubjects(foundStudent, subjectsNoLongerTakenByStudent);
-                foundStudent.getSubject().clear();
-                subjects.forEach(s -> System.out.println("returned subjects: 3 " + s.getTitle()));
-                subjects.forEach(s -> foundStudent.getSubject().add(s));
           }
+            return foundStudent;
         }
         else
             throw new IllegalArgumentException("updateInfo is null in update");
     }
 
-    private Set<Subject> getSubjectsDiff(List<String> updateRequestSubjects, Set<Subject> foundSubjects) {
-       return foundSubjects.stream().filter(s -> !updateRequestSubjects.contains(s.getTitle())).collect(Collectors.toSet());
+
+    public List<Subject> getSubjectsToAddToDb(List<String> stringSubjects, List<Subject> dbSubjects) {
+        checkIfNullAndThenThrowException(dbSubjects);
+        List<String> dbSubjectsTitleList = new ArrayList<>();
+        dbSubjects.forEach(s-> Optional.ofNullable(s).map(Subject::getTitle).ifPresent(dbSubjectsTitleList::add));
+       return toSubject(stringSubjects.stream().filter(s -> !dbSubjectsTitleList.contains(s)).collect(Collectors.toList()));
     }
 
-
-    private void createSubjectsIfNotAlreadyInDb(Student student, List<Subject> subjects){
-        List<String> notfoundSubjects = compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(student.getSubjects(),subjects);
-        if(!notfoundSubjects.isEmpty()){
-            notfoundSubjects.forEach(s -> {
-                Subject subject = new Subject();
-                subject.setTitle(s);
-                subject.getStudents().add(student);
-                subjectTransactionAccess.addSubject(subject);
-                //:TODO before it was subjects.add(subject) and worked
-            });
-            fetchAndCreateSubjects(student);
-        }
+    public List<Subject> getSubjectsToRemoveFromStudent(List<String> stringSubjects, Set<Subject> dbSubjects) {
+        checkIfNullAndThenThrowException(dbSubjects);
+        return dbSubjects.stream().filter(s -> !stringSubjects.contains(s.getTitle())).collect(Collectors.toList());
     }
-    private List<Subject> fetchAndCreateSubjects(Student student){
-        Optional.ofNullable(student).map(Student::getSubjects).orElseThrow(MissingFieldException::new);
-        List<Subject> subjects = subjectTransactionAccess.getSubjectByName(student.getSubjects());
-        createSubjectsIfNotAlreadyInDb(student, subjects);
-        subjects.forEach(s -> System.out.println("returned subjects  1: " + s.getTitle()));
+
+    private List<Subject> toSubject(List<String> stringSubject){
+        List<Subject> subjects = new ArrayList<>();
+        stringSubject.forEach(s -> {
+            Subject subject = new Subject();
+            subject.setTitle(s);
+            subjects.add(subject);
+        });
         return subjects;
     }
 
-    private List<String> compareIncomingSubjectsWithSubjectsInDbAndOutputDiff(List<String> stringSubjects, List<Subject> dbSubjects) {
-        List<String> dbSubjectsTitleList = new ArrayList<>();
-        if(dbSubjects!=null){
-            dbSubjects.forEach(s-> Optional.ofNullable(s).map(Subject::getTitle).ifPresent(dbSubjectsTitleList::add));
-        }
-       stringSubjects.removeAll(dbSubjectsTitleList);
-       return stringSubjects;
+
+    private void checkIfNullAndThenThrowException(Object object){
+        if(object==null)
+            throw new IllegalArgumentException();
     }
+
+
+
 
 
 
