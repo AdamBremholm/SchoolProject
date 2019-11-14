@@ -51,20 +51,12 @@ public class SubjectTransaction implements SubjectTransactionAccess{
     }
 
     @Override
-    public void deleteOrphanedStudentInNoLongerTakenSubjects(Student foundStudent, Set<Subject> detachedSubjects) {
+    public void removeSubject(Subject subject) {
 
-        CopyOnWriteArrayList<Subject> subjects = new CopyOnWriteArrayList<>(detachedSubjects);
-       for (Subject subject: subjects) {
-           if (subject.getStudents().contains(foundStudent)) {
-               CopyOnWriteArrayList<Student> students = new CopyOnWriteArrayList<>(subject.getStudents());
-               for (Student student : students) {
-                   if (student.getId().equals(foundStudent.getId())) {
-                       students.remove(student);
-                   }
-               }
-           }
-        entityManager.merge(subject);
+        entityManager.remove(subject);
         entityManager.flush();
-       }
+
     }
+
+
 }

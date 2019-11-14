@@ -14,5 +14,5 @@ public interface SubjectTransactionAccess {
     Subject addSubject(Subject subject);
     List<Subject> getSubjectByName(List<String> subject);
     Optional<Subject> findSubjectByUuid(String uuid);
-    void deleteOrphanedStudentInNoLongerTakenSubjects(Student updateInfo, Set<Subject> detachedSubjects);
+    void removeSubject(Subject subject);
 }

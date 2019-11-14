@@ -129,6 +129,13 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
      return SubjectModel.toModel(subjectTransactionAccess.getSubjectByName(subject));
     }
 
+    @Override
+    public void deleteSubjectByUuid(String uuid){
+        Subject target = subjectTransactionAccess.findSubjectByUuid(uuid).orElseThrow(NoSuchIdException::new);
+        target.getStudents().forEach(s -> studentTransactionAccess.removeSubjectFromStudent(s, target));
+        subjectTransactionAccess.removeSubject(target);
+    }
+
     //// Utility methods
 
     private Student updateTargetFieldIfRequestFieldIsPresentAndNotBlank(Student foundStudent, Student updateInfo) {

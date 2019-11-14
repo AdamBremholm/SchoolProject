@@ -30,4 +30,8 @@ public interface SchoolAccessLocal {
     SubjectModel addSubject(Subject subject);
 
     List<SubjectModel> findSubjectsByName(List<String> subject);
+
+    void deleteSubjectByUuid(String uuid);
+
+
 }

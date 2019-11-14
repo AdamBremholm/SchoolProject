@@ -98,7 +98,7 @@ public class StudentController {
 
     @DELETE
     @Path("{uuid}")
-    public Response deleteUser(@PathParam("uuid") String uuid) {
+    public Response deleteStudent(@PathParam("uuid") String uuid) {
         try {
             sal.removeStudent(uuid);
             return Response.status(Response.Status.NO_CONTENT).build();
