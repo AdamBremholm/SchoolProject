@@ -52,7 +52,6 @@ public class SubjectTransaction implements SubjectTransactionAccess{
 
     @Override
     public void removeSubject(Subject subject) {
-
         entityManager.remove(subject);
         entityManager.flush();
 

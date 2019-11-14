@@ -32,6 +32,12 @@ public class Subject implements Serializable {
     @ManyToMany(mappedBy = "subject", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     private Set<Student> students = new HashSet<>();
 
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinTable(name = "subject_teacher",
+            joinColumns=@JoinColumn(name="subj_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "teach_id", referencedColumnName = "id"))
+    private Teacher teacher = new Teacher();
+
     @PrePersist
     public void initializeUUID() {
         if (getUuid() == null) {

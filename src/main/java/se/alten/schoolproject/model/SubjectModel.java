@@ -3,6 +3,7 @@ package se.alten.schoolproject.model;
 import lombok.*;
 import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.entity.Subject;
+import se.alten.schoolproject.entity.Teacher;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ public class SubjectModel implements Serializable {
     private Long id;
     private String uuid;
     private String title;
+    private Teacher teacher = new Teacher();
     private List<String> students = new ArrayList<>();
 
     public static SubjectModel toModel(Subject subjectToAdd) {
@@ -27,6 +29,7 @@ public class SubjectModel implements Serializable {
         Optional.ofNullable(subjectToAdd).map(Subject::getTitle).ifPresent(subjectModel::setTitle);
         Optional.ofNullable(subjectToAdd).map(Subject::getStudents).ifPresent(students -> students.forEach(s -> subjectModel.getStudents().add(s.getUuid())));
         Optional.ofNullable(subjectToAdd).map(Subject::getUuid).ifPresent(subjectModel::setUuid);
+        Optional.ofNullable(subjectToAdd).map(Subject::getTeacher).ifPresent(subjectModel::setTeacher);
         return subjectModel;
     }
 

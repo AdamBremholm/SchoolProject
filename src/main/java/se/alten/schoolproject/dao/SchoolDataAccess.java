@@ -2,13 +2,16 @@ package se.alten.schoolproject.dao;
 
 import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.entity.Subject;
+import se.alten.schoolproject.entity.Teacher;
 import se.alten.schoolproject.exceptions.MissingFieldException;
 import se.alten.schoolproject.exceptions.NoSuchIdException;
 import se.alten.schoolproject.exceptions.WrongHttpMethodException;
 import se.alten.schoolproject.model.StudentModel;
 import se.alten.schoolproject.model.SubjectModel;
+import se.alten.schoolproject.model.TeacherModel;
 import se.alten.schoolproject.transaction.StudentTransactionAccess;
 import se.alten.schoolproject.transaction.SubjectTransactionAccess;
+import se.alten.schoolproject.transaction.TeacherTransactionAccess;
 import se.alten.schoolproject.util.ReflectionUtil;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -25,6 +28,9 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
 
     @Inject
     SubjectTransactionAccess subjectTransactionAccess;
+
+    @Inject
+    TeacherTransactionAccess teacherTransactionAccess;
 
 
     //Student methods
@@ -135,6 +141,66 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
         target.getStudents().forEach(s -> studentTransactionAccess.removeSubjectFromStudent(s, target));
         subjectTransactionAccess.removeSubject(target);
     }
+
+
+    //// Teacher methods
+
+
+    @Override
+    public List<TeacherModel> listAllTeachers() {
+       return TeacherModel.toModel(teacherTransactionAccess.listTeachers());
+    }
+
+    @Override
+    public TeacherModel addTeacher(Teacher teacher) {
+        Set<String> emptyFields = ReflectionUtil.listNullOrEmptyFields(teacher);
+        Set<String> emptyFieldsAfterExclusions = ReflectionUtil.removeExceptionsFromSet(emptyFields, Set.of("id", "uuid", "subject", "subjects"));
+        if (emptyFieldsAfterExclusions.isEmpty()) {
+
+            if (!emptyFields.contains("subjects")) {
+                List<Subject> dbSubjects = subjectTransactionAccess.getSubjectByName(teacher.getSubjects());
+                List<Subject> subjectsToAddGlobally = getSubjectsToAddToDb(teacher.getSubjects(), dbSubjects);
+                subjectsToAddGlobally.forEach(s -> subjectTransactionAccess.addSubject(s));
+                List<Subject> allSubjects = subjectTransactionAccess.getSubjectByName(teacher.getSubjects());
+                allSubjects.forEach(sub -> {
+                    teacher.getSubject().add(sub);
+                });
+            }
+            Teacher addedTeacher = teacherTransactionAccess.addTeacher(teacher);
+
+            return TeacherModel.toModel(addedTeacher);
+
+        } else {
+            throw new MissingFieldException(emptyFieldsAfterExclusions.toString() + " are blank or missing");
+        }
+    }
+
+    @Override
+    public void removeTeacher(String uuid) {
+        Teacher foundTeacher = teacherTransactionAccess.findTeacherByUuid(uuid).orElseThrow(NoSuchIdException::new);
+        teacherTransactionAccess.removeTeacher(foundTeacher);
+    }
+
+    @Override
+    public TeacherModel updateTeacherPartial(String uuid, Teacher teacher) {
+        return null;
+    }
+
+    @Override
+    public TeacherModel findTeacherByUuid(String uuid) {
+        Teacher result = teacherTransactionAccess.findTeacherByUuid(uuid).orElseThrow(NoSuchIdException::new);
+        return TeacherModel.toModel(result);
+    }
+
+    @Override
+    public TeacherModel updateTeacherFull(String uuid, Teacher teacher) {
+        return null;
+    }
+
+
+
+
+
 
     //// Utility methods
 
