@@ -42,8 +42,8 @@ wildfly:undeploy clean:clean wildfly:deploy
 ```
 To make a clean deploy of the .war file to the wildfly server.
 
-### Endpoints:
-####Subjects:
+### Endpoints
+####Subjects
 
 p.s. all id's below refer to the field uuid, not the primary key id. 
 
@@ -95,7 +95,7 @@ example body:
 DELETE ```/school/students/{id}``` --> deletes student with id.
 
 
-####Subjects:
+####Subjects
 
 (you do not add students or teachers when creating or modifying subjects. This is done through the student and teacher endpoints)
 
@@ -111,7 +111,7 @@ example body:
 
 DELETE ```/school/subjects/{id}``` --> deletes subject with id.
 
-####Teachers:
+####Teachers
 
 GET ```/school/teachers``` --> returns a list of all students
 
@@ -145,7 +145,7 @@ DELETE ```/school/teachers/{id}``` --> deletes teacher with id.
 
 
 
-####Changes :
+####Changes
 
 1. Added uuid to all entities so that we dont query for primary key in db any more. 
 Safer than using the email for api actions for students.
@@ -158,7 +158,9 @@ Safer than using the email for api actions for students.
 if the subject already exists in db and if not creates it.
 Works on both create and updates for Student and teacher.
 
-#### Test run :
+5. Improved error handling. 
+
+####Test run
 
 (The id in the endpoints is value of the uuid field)
 
