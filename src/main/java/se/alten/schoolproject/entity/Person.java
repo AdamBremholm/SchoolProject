@@ -11,4 +11,12 @@ public interface Person {
     String getLastname();
     String getUuid();
     Long getId();
+    void setForename(String s);
+    void setLastname(String s);
+    void setUuid(String s);
+    void setId(Long id);
+    void setSubjects(List<String> subjects);
+    void setSubject(Set<Subject> subject);
+
+
 }
