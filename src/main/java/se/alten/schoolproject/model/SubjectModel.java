@@ -32,6 +32,13 @@ public class SubjectModel implements Serializable {
         Optional.ofNullable(subjectToAdd).map(Subject::getTeachers).ifPresent(teachers -> teachers.forEach(t -> subjectModel.getTeachers().add(t.getUuid())));
         return subjectModel;
     }
+    public static SubjectModel toModelWithOnlyTitleAndStudents(Subject subjectToAdd) {
+        SubjectModel subjectModel = new SubjectModel();
+        Optional.ofNullable(subjectToAdd).map(Subject::getTitle).ifPresent(subjectModel::setTitle);
+        Optional.ofNullable(subjectToAdd).map(Subject::getStudents).ifPresent(students -> students.forEach(s -> subjectModel.getStudents().add(s.getUuid())));
+        subjectModel.teachers = null;
+        return subjectModel;
+    }
 
     public static List<SubjectModel> toModel(List<Subject> subjects){
         List<SubjectModel> subjectModelList = new ArrayList<>();

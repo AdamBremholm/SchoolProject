@@ -1,6 +1,7 @@
 package se.alten.schoolproject.model;
 
 import lombok.*;
+import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.entity.Teacher;
 
 import java.io.Serializable;
@@ -18,14 +19,14 @@ public class TeacherModel implements Serializable {
     private String uuid;
     private String forename;
     private String lastname;
-    private Set<String> subjects = new HashSet<>();
+    private List<SubjectModel> subjects = new ArrayList<>();
 
     public static TeacherModel toModel(Teacher teacher) {
         TeacherModel teacherModel = new TeacherModel();
         Optional.ofNullable(teacher).map(Teacher::getForename).ifPresent(teacherModel::setForename);
         Optional.ofNullable(teacher).map(Teacher::getLastname).ifPresent(teacherModel::setLastname);
         Optional.ofNullable(teacher).map(Teacher::getUuid).ifPresent(teacherModel::setUuid);
-        Optional.ofNullable(teacher).map(Teacher::getSubject).ifPresent(s -> s.forEach(su -> teacherModel.getSubjects().add(su.getTitle())));
+        Optional.ofNullable(teacher).map(Teacher::getSubject).ifPresent(s -> s.forEach(su -> teacherModel.getSubjects().add(SubjectModel.toModelWithOnlyTitleAndStudents(su))));
         return teacherModel;
     }
 
