@@ -1,7 +1,6 @@
 package se.alten.schoolproject.transaction;
 
 
-import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.exceptions.DuplicateException;
 
@@ -9,7 +8,6 @@ import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
 import javax.persistence.*;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 
 @Stateless
@@ -20,7 +18,7 @@ public class SubjectTransaction implements SubjectTransactionAccess{
     private EntityManager entityManager;
 
     @Override
-    public List listAllSubjects() {
+    public List<Subject> listAllSubjects() {
         return entityManager.createQuery("SELECT s FROM Subject s", Subject.class).getResultList();
     }
 

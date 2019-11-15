@@ -1,6 +1,5 @@
 package se.alten.schoolproject.transaction;
 
-import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.entity.Teacher;
 import se.alten.schoolproject.exceptions.DuplicateException;
@@ -49,7 +48,7 @@ public class TeacherTransaction implements TeacherTransactionAccess {
     @Override
     public Optional<Teacher> findTeacherById(Long id) {
         return Optional.ofNullable(entityManager.find(Teacher.class, id));
-    }
+            }
 
     @Override
     public Optional<Teacher> findTeacherByUuid(String uuid) {

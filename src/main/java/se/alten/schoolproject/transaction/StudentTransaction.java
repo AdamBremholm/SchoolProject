@@ -4,8 +4,6 @@ package se.alten.schoolproject.transaction;
 import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.exceptions.DuplicateException;
-import se.alten.schoolproject.exceptions.MissingFieldException;
-import se.alten.schoolproject.exceptions.NoSuchIdException;
 
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
@@ -13,11 +11,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 
 @Stateless
@@ -44,12 +39,6 @@ public class StudentTransaction implements StudentTransactionAccess {
             throw new DuplicateException();
         }
 
-    }
-
-    @Override
-    public Student addStudentWithoutRelationShips(Student studentToAdd) {
-
-        return null;
     }
 
     @Override

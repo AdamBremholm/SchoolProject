@@ -35,7 +35,6 @@ public interface SchoolAccessLocal {
 
     SubjectModel addSubject(Subject subject);
 
-    List<SubjectModel> findSubjectsByName(List<String> subject);
 
     void deleteSubjectByUuid(String uuid);
 
@@ -50,10 +49,6 @@ public interface SchoolAccessLocal {
     TeacherModel updateTeacherPartial(String uuid, Teacher teacher);
 
     TeacherModel findTeacherByUuid(String uuid);
-
-    TeacherModel updateTeacherFull(String uuid, Teacher teacher);
-
-
 
 
 }

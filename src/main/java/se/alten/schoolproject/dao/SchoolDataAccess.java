@@ -126,10 +126,7 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
         }
     }
 
-    @Override
-    public List<SubjectModel> findSubjectsByName(List<String> subject) {
-     return SubjectModel.toModel(subjectTransactionAccess.getSubjectByName(subject));
-    }
+
 
     @Override
     public void deleteSubjectByUuid(String uuid){
@@ -189,11 +186,6 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
         return TeacherModel.toModel(result);
     }
 
-    @Override
-    public TeacherModel updateTeacherFull(String uuid, Teacher teacher) {
-        return null;
-    }
-
 
 
     //// Utility methods
@@ -206,7 +198,7 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
         subject.addAll(allSubjects);
     }
 
-    private Person updateTargetFieldIfRequestFieldIsPresentAndNotBlank(Person foundPerson, Person updateInfo) {
+    private void updateTargetFieldIfRequestFieldIsPresentAndNotBlank(Person foundPerson, Person updateInfo) {
         Optional<Person> optUpdateInfo = Optional.ofNullable(updateInfo);
         if (optUpdateInfo.isPresent()) {
             if(updateInfo instanceof Student && foundPerson instanceof Student)
@@ -216,10 +208,8 @@ public class SchoolDataAccess implements SchoolAccessLocal, SchoolAccessRemote {
             optUpdateInfo.map(Person::getLastname).filter(Predicate.not(String::isBlank)).ifPresent(foundPerson::setLastname);
             if(optUpdateInfo.map(Person::getSubjects).filter(Predicate.not(List::isEmpty)).isPresent()){
                 updateSubjectsInDb(updateInfo, foundPerson);
-                return foundPerson;
 
-          }
-            return foundPerson;
+            }
         }
         else
             throw new IllegalArgumentException("updateInfo is null in update");

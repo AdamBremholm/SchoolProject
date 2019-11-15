@@ -1,7 +1,6 @@
 package se.alten.schoolproject.model;
 
 import lombok.*;
-import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.entity.Teacher;
 
 import java.io.Serializable;

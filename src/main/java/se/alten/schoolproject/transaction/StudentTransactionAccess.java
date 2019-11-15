@@ -22,5 +22,4 @@ public interface StudentTransactionAccess {
 
     void removeSubjectFromStudent(Student foundStudent, Subject s);
 
-    Student addStudentWithoutRelationShips(Student studentToAdd);
 }

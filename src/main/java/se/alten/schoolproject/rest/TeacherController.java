@@ -10,6 +10,7 @@ import se.alten.schoolproject.model.TeacherModel;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.NoResultException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -55,7 +56,10 @@ public class TeacherController {
             return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
         }
         catch ( EJBException e ) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
+            if(e.getCausedByException() instanceof NoResultException)
+                return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getCausedByException()+"\"}").build();
+            else
+                return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
         }
 
         catch ( Exception e ) {
@@ -97,6 +101,8 @@ public class TeacherController {
             return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
         }
         catch ( EJBException e ) {
+            if(e.getCausedByException() instanceof NoResultException)
+                return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getCausedByException()+"\"}").build();
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
         }
         catch ( Exception e ) {
@@ -104,31 +110,6 @@ public class TeacherController {
         }
     }
 
-    @PUT
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{uuid}")
-    public Response replaceStudent(@PathParam("uuid") String uuid, Teacher teacher) {
-        try {
-            TeacherModel result = sal.updateTeacherFull(uuid, teacher);
-            return Response.ok(result).build();
-        }
-        catch ( NoSuchIdException e ) {
-            return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
-        }
-        catch ( NoSuchSubjectException e ) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getMessage()+"\"}").build();
-        }
-        catch ( WrongHttpMethodException e ) {
-            return Response.status(Response.Status.METHOD_NOT_ALLOWED).entity("{\""+e.getClass().getSimpleName()+": " + e.getMessage()+"\"}").build();
-        }
-        catch ( EJBException e ) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
-        }
-        catch (Exception e) {
-            return Response.notModified(e.toString()).status(Response.Status.BAD_GATEWAY).build();
-        }
-    }
 
     @PATCH
     @Consumes(MediaType.APPLICATION_JSON)
@@ -146,6 +127,8 @@ public class TeacherController {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getMessage()+"\"}").build();
         }
         catch ( EJBException e ) {
+            if(e.getCausedByException() instanceof NoResultException)
+                return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getCausedByException()+"\"}").build();
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
         }
         catch (Exception e) {

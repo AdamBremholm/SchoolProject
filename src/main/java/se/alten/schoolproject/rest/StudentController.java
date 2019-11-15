@@ -9,6 +9,7 @@ import se.alten.schoolproject.model.StudentModel;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.NoResultException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -65,6 +66,8 @@ public class StudentController {
             return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
         }
         catch ( EJBException e ) {
+            if(e.getCausedByException() instanceof NoResultException)
+                return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getCausedByException()+"\"}").build();
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
         }
 
@@ -89,6 +92,8 @@ public class StudentController {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getMessage()+"\"}").build();
         }
         catch ( EJBException e ) {
+            if(e.getCausedByException() instanceof NoResultException)
+                return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getCausedByException()+"\"}").build();
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
         }
         catch ( Exception e ) {
@@ -107,6 +112,8 @@ public class StudentController {
             return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
         }
         catch ( EJBException e ) {
+            if(e.getCausedByException() instanceof NoResultException)
+                return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getCausedByException()+"\"}").build();
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
         }
         catch ( Exception e ) {
@@ -133,6 +140,8 @@ public class StudentController {
            return Response.status(Response.Status.METHOD_NOT_ALLOWED).entity("{\""+e.getClass().getSimpleName()+": " + e.getMessage()+"\"}").build();
        }
        catch ( EJBException e ) {
+           if(e.getCausedByException() instanceof NoResultException)
+               return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getCausedByException()+"\"}").build();
            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
        }
        catch (Exception e) {
@@ -156,6 +165,8 @@ public class StudentController {
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getMessage()+"\"}").build();
         }
         catch ( EJBException e ) {
+            if(e.getCausedByException() instanceof NoResultException)
+                return Response.status(Response.Status.NOT_FOUND).entity("{\""+e.getCausedByException()+"\"}").build();
             return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
         }
         catch (Exception e) {

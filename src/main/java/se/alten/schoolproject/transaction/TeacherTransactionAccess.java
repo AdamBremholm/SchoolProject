@@ -1,6 +1,5 @@
 package se.alten.schoolproject.transaction;
 
-import se.alten.schoolproject.entity.Student;
 import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.entity.Teacher;
 
