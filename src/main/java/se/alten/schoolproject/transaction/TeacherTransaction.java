@@ -1,5 +1,7 @@
 package se.alten.schoolproject.transaction;
 
+import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.entity.Teacher;
 import se.alten.schoolproject.exceptions.DuplicateException;
 
@@ -53,6 +55,17 @@ public class TeacherTransaction implements TeacherTransactionAccess {
     public Optional<Teacher> findTeacherByUuid(String uuid) {
         TypedQuery<Teacher> query = entityManager.createQuery("SELECT t from Teacher t WHERE t.uuid = :uuid", Teacher.class);
         return Optional.ofNullable(query.setParameter("uuid", uuid).getSingleResult());
+    }
+
+    @Override
+    public void removeSubjectFromTeacher(Teacher t, Subject target) {
+
+        TypedQuery<Teacher> query = entityManager.createQuery("SELECT t from Teacher t join fetch t.subject WHERE t.id = :id", Teacher.class);
+        query.setParameter("id", t.getId());
+        Teacher result = query.getSingleResult();
+        result.getSubject().removeIf(ts -> ts.getId().equals(target.getId()));
+        entityManager.merge(result);
+        entityManager.flush();
     }
 
 }

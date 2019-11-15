@@ -14,7 +14,7 @@ public class SchoolDataAccessTest {
         SchoolDataAccess schoolDataAccess = new SchoolDataAccess();
         List<String> strings = List.of("historia", "matte");
         Set<Subject> subjects = Set.of(new Subject(null, null, "vg", null, null));
-        System.out.println(schoolDataAccess.getSubjectsToRemoveFromStudent(strings, subjects));
+        System.out.println(schoolDataAccess.getSubjectsToRemoveFromPerson(strings, subjects));
     }
 
 

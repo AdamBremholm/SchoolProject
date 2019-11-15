@@ -21,7 +21,7 @@ public class SubjectModel implements Serializable {
     private Long id;
     private String uuid;
     private String title;
-    private Teacher teacher = new Teacher();
+    private List<String> teachers = new ArrayList<>();
     private List<String> students = new ArrayList<>();
 
     public static SubjectModel toModel(Subject subjectToAdd) {
@@ -29,7 +29,7 @@ public class SubjectModel implements Serializable {
         Optional.ofNullable(subjectToAdd).map(Subject::getTitle).ifPresent(subjectModel::setTitle);
         Optional.ofNullable(subjectToAdd).map(Subject::getStudents).ifPresent(students -> students.forEach(s -> subjectModel.getStudents().add(s.getUuid())));
         Optional.ofNullable(subjectToAdd).map(Subject::getUuid).ifPresent(subjectModel::setUuid);
-        Optional.ofNullable(subjectToAdd).map(Subject::getTeacher).ifPresent(subjectModel::setTeacher);
+        Optional.ofNullable(subjectToAdd).map(Subject::getTeachers).ifPresent(teachers -> teachers.forEach(t -> subjectModel.getTeachers().add(t.getUuid())));
         return subjectModel;
     }
 

@@ -3,7 +3,10 @@ package se.alten.schoolproject.rest;
 import lombok.NoArgsConstructor;
 import se.alten.schoolproject.dao.SchoolAccessLocal;
 import se.alten.schoolproject.entity.Subject;
+import se.alten.schoolproject.exceptions.DuplicateException;
+import se.alten.schoolproject.exceptions.MissingFieldException;
 import se.alten.schoolproject.exceptions.NoSuchIdException;
+import se.alten.schoolproject.exceptions.NoSuchSubjectException;
 import se.alten.schoolproject.model.SubjectModel;
 
 import javax.ejb.EJBException;
@@ -28,8 +31,12 @@ public class SubjectController {
         try {
             List subject = sal.listAllSubjects();
             return Response.ok(subject).build();
-        } catch ( Exception e ) {
-            return Response.status(Response.Status.CONFLICT).build();
+
+        }  catch ( EJBException e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
+        }
+        catch ( Exception e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e+"\"}").build();
         }
     }
 
@@ -40,8 +47,17 @@ public class SubjectController {
         try {
             SubjectModel subjectModel = sal.addSubject(subject);
             return Response.ok(subjectModel).build();
-        } catch (Exception e ) {
-            return Response.status(404).entity(e.getCause().toString()).build();
+        } catch ( DuplicateException e ) {
+            return Response.status(Response.Status.CONFLICT).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
+        }
+        catch ( NoSuchSubjectException | MissingFieldException e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getMessage()+"\"}").build();
+        }
+        catch ( EJBException e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getCausedByException()+"\"}").build();
+        }
+        catch ( Exception e ) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\""+e.getClass().getSimpleName()+"\"}").build();
         }
     }
 

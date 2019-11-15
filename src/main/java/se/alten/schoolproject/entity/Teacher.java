@@ -4,10 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name="teacher")
@@ -16,7 +13,7 @@ import java.util.Set;
 @Getter
 @Setter
 @ToString
-public class Teacher implements Serializable {
+public class Teacher implements Serializable, Person {
 
     private static final long serialVersionUID = 1L;
 
@@ -34,9 +31,20 @@ public class Teacher implements Serializable {
     @Column(name = "lastname")
     private String lastname;
 
-    @OneToMany(mappedBy = "teacher", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY, orphanRemoval = true)
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinTable(name = "subject_teacher",
+            joinColumns=@JoinColumn(name="subj_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "teach_id", referencedColumnName = "id"))
     private Set<Subject> subject = new HashSet<>();
 
     @Transient
     private List<String> subjects = new ArrayList<>();
+
+    @PrePersist
+    public void initializeUUID() {
+        if (getUuid() == null) {
+            setUuid(UUID.randomUUID().toString());
+        }
+    }
 }

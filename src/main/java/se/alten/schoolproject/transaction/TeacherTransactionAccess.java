@@ -1,5 +1,7 @@
 package se.alten.schoolproject.transaction;
 
+import se.alten.schoolproject.entity.Student;
+import se.alten.schoolproject.entity.Subject;
 import se.alten.schoolproject.entity.Teacher;
 
 import java.util.List;
@@ -13,4 +15,5 @@ public interface TeacherTransactionAccess {
     Teacher updateTeacher(Teacher updateInfo);
     Optional<Teacher> findTeacherById(Long id);
     Optional<Teacher> findTeacherByUuid(String uuid);
+    void removeSubjectFromTeacher(Teacher t, Subject target);
 }

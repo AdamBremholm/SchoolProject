@@ -15,7 +15,7 @@ import java.util.function.Predicate;
 @Getter
 @Setter
 @ToString
-public class Student implements Serializable {
+public class Student implements Serializable, Person {
 
     private static final long serialVersionUID = 1L;
 

@@ -47,6 +47,12 @@ public class StudentTransaction implements StudentTransactionAccess {
     }
 
     @Override
+    public Student addStudentWithoutRelationShips(Student studentToAdd) {
+
+        return null;
+    }
+
+    @Override
     public Optional<Student> findStudentById(Long id) {
         return Optional.ofNullable(entityManager.find(Student.class, id));
     }
@@ -82,8 +88,8 @@ public class StudentTransaction implements StudentTransactionAccess {
        entityManager.merge(target);
        entityManager.flush();
 
-
     }
+
 
 
     @Override
